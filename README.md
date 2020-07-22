@@ -1,6 +1,6 @@
 # pos_qcs
 
-Offline Simple Pos with sqflite which calls erpnext API to sync data.
+Offline Simple Pos on flutter with sqflite which calls erpnext API to sync data. 
 
 ## Getting Started
 
