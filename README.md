@@ -1,6 +1,6 @@
 # pos_qcs
 
-A new Flutter project.
+Offline Simply Pos test. 
 
 ## Getting Started
 
