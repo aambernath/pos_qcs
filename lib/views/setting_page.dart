@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:pos_qcs/models/customer.dart';
 import 'package:pos_qcs/utils/database_helper.dart';
 import 'package:pos_qcs/views/sales_invoice_page.dart';
+import 'package:pos_qcs/models/posconfig.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class settingspage extends StatefulWidget {
   settingspage({Key key, this.title}) : super(key: key);
@@ -25,27 +27,28 @@ class settingspage extends StatefulWidget {
 
 class _settingspageState extends State<settingspage> {
   final _formKey = GlobalKey<FormState>();
-  final _ctrlcustomername = TextEditingController();
-  final _ctrlmobile = TextEditingController();
-  final _ctrlcontactname = TextEditingController();
-  final _ctrltrn = TextEditingController();
-  final _ctrlterritory = TextEditingController();
-  Customer _customer = Customer();
+  final _ctrlurl = TextEditingController();
+  final _ctrlemail = TextEditingController();
+  final _ctrlpassword = TextEditingController();
+  final _ctrlwarehouse = TextEditingController();
+  final _ctrlcash = TextEditingController();
+
+  PosConfig _posconfig = PosConfig();
   DatabaseHelper _dbHelper;
-  List<Customer> _customers = [];
+  List<PosConfig> _posconfigs = [];
 
   @override
   void initState() {
     super.initState();
     _dbHelper = DatabaseHelper.instance;
-    _refreshCustomerList();
+    _refreshposconfigList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Customer List"),
+        title: Text("Settings"),
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
@@ -66,29 +69,29 @@ class _settingspageState extends State<settingspage> {
         child: Column(
           children: <Widget>[
             TextFormField(
-              controller: _ctrlcustomername,
-              decoration: InputDecoration(labelText: 'Customer Name'),
-              onSaved: (val) => setState(() => _customer.name = val),
+              controller: _ctrlurl,
+              decoration: InputDecoration(labelText: 'URL'),
+              onSaved: (val) => setState(() => _posconfig.url = val),
             ),
             TextFormField(
-              controller: _ctrlmobile,
-              decoration: InputDecoration(labelText: 'Mobile'),
-              onSaved: (val) => setState(() => _customer.mobile = val),
+              controller: _ctrlemail,
+              decoration: InputDecoration(labelText: 'Email'),
+              onSaved: (val) => setState(() => _posconfig.email = val),
             ),
             TextFormField(
-              controller: _ctrlcontactname,
-              decoration: InputDecoration(labelText: 'Contact Name'),
-              onSaved: (val) => setState(() => _customer.contactname = val),
+              controller: _ctrlpassword,
+              decoration: InputDecoration(labelText: 'Password'),
+              onSaved: (val) => setState(() => _posconfig.password = val),
             ),
             TextFormField(
-              controller: _ctrltrn,
-              decoration: InputDecoration(labelText: 'TRN'),
-              onSaved: (val) => setState(() => _customer.trn = val),
+              controller: _ctrlwarehouse,
+              decoration: InputDecoration(labelText: 'Warehouse'),
+              onSaved: (val) => setState(() => _posconfig.warehouse = val),
             ),
             TextFormField(
-              controller: _ctrlterritory,
-              decoration: InputDecoration(labelText: 'Territory'),
-              onSaved: (val) => setState(() => _customer.territory = val),
+              controller: _ctrlcash,
+              decoration: InputDecoration(labelText: 'Cash'),
+              onSaved: (val) => setState(() => _posconfig.cash = val),
             ),
             Row(
               children: <Widget>[
@@ -100,15 +103,6 @@ class _settingspageState extends State<settingspage> {
                     color: Colors.green,
                     textColor: Colors.white,
                   ),
-                ),
-                Container(
-                  margin: EdgeInsets.all(10.0),
-                  child: RaisedButton(
-                    onPressed: () => _onaddinvoice(),
-                    child: Text('Add Invoice'),
-                    color: Colors.blue,
-                    textColor: Colors.white,
-                  ),
                 )
               ],
             )
@@ -116,76 +110,33 @@ class _settingspageState extends State<settingspage> {
         ),
       ));
 
-  _refreshCustomerList() async {
-    List<Customer> x = await _dbHelper.fetchCustomers();
-    setState(() {
-      _customers = x;
-    });
-  }
-
-  _onaddinvoice() {
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => salesinvoicelist(
-              customer: _customer,
-            )));
-  }
-
   _onSave() async {
     var form = _formKey.currentState;
     form.save();
-    if (_customer.id == null)
-      await _dbHelper.insertCustomer(_customer);
+    if (_posconfig.id == null)
+      await _dbHelper.insertPosConfig(_posconfig);
     else
-      await _dbHelper.updateCustomer(_customer);
-    _refreshCustomerList();
+      await _dbHelper.updatePosConfig(_posconfig);
+    _refreshposconfigList();
     form.reset();
   }
 
-  _list() => Expanded(
-        child: Card(
-          margin: EdgeInsets.fromLTRB(20, 30, 20, 0),
-          child: ListView.builder(
-            itemBuilder: (context, index) {
-              return Column(
-                children: <Widget>[
-                  ListTile(
-                    leading: Icon(Icons.account_circle,
-                        color: Colors.deepPurple, size: 40.0),
-                    title: Text(
-                      _customers[index].name.toUpperCase(),
-                      style: TextStyle(
-                          color: Colors.lime, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(_customers[index].mobile),
-                    onTap: () {
-                      setState(() {
-                        _customer = _customers[index];
-                        _ctrlcustomername.text = _customers[index].name;
-                        _ctrlmobile.text = _customers[index].mobile;
-                        _ctrlcontactname.text = _customers[index].contactname;
-                        _ctrltrn.text = _customers[index].trn;
-                        _ctrlterritory.text = _customers[index].territory;
-                      });
-                    },
-                    onLongPress: () {
-                      setState(() {
-                        _customer = _customers[index];
-                        _ctrlcustomername.text = "";
-                        _ctrlmobile.text = "";
-                        _ctrlcontactname.text = "";
-                        _ctrltrn.text = "";
-                        _ctrlterritory.text = "";
-                      });
-                    },
-                  ),
-                  Divider(
-                    height: 5.0,
-                  )
-                ],
-              );
-            },
-            itemCount: _customers.length,
-          ),
-        ),
-      );
+  _refreshposconfigList() async {
+    List<PosConfig> x = await _dbHelper.fetchPosConfigs();
+    setState(() {
+      _posconfigs = x;
+      _posconfig.id = _posconfigs[0].id;
+      _posconfig.url = _posconfigs[0].url;
+      _posconfig.email = _posconfigs[0].email;
+      _posconfig.password = _posconfigs[0].password;
+      _posconfig.warehouse = _posconfigs[0].warehouse;
+      _posconfig.cash = _posconfigs[0].cash;
+      _ctrlurl.text = _posconfig.url;
+      _ctrlemail.text = _posconfig.email;
+      _ctrlpassword.text = _posconfig.password;
+      _ctrlwarehouse.text = _posconfig.warehouse;
+      _ctrlcash.text = _posconfig.cash;
+    });
+    print(x[0].url);
+  }
 }

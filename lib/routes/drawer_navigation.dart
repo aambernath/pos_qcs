@@ -3,6 +3,9 @@ import 'package:pos_qcs/views/item_page.dart';
 import 'package:pos_qcs/views/customer_page.dart';
 import 'package:pos_qcs/views/sales_page.dart';
 import 'package:pos_qcs/utils/sync_helper.dart';
+import 'package:pos_qcs/views/setting_page.dart';
+import 'package:pos_qcs/utils/database_helper.dart';
+import 'package:pos_qcs/models/posconfig.dart';
 
 class DrawerNavigation extends StatelessWidget {
   final String title;
@@ -22,8 +25,8 @@ class DrawerNavigation extends StatelessWidget {
                 backgroundImage: NetworkImage(
                     'https://i.ytimg.com/vi/Hcs9bqNsAFU/maxresdefault.jpg'),
               ),
-              accountName: Text('Vivek Digambernath'),
-              accountEmail: Text('vivek@quarkcs.com'),
+              accountName: Text('Beirut Bakery'),
+              //accountEmail: Text('getemail().toString()'),
               decoration: BoxDecoration(color: Colors.blue),
             ),
             ListTile(
@@ -51,19 +54,26 @@ class DrawerNavigation extends StatelessWidget {
                   .push(MaterialPageRoute(builder: (context) => saleslist())),
             ),
             ListTile(
-              leading: Icon(Icons.find_replace),
-              title: Text('Sync Now'),
-              onTap: () {
-                fetcherpitem();
-              },
-            ),
-            ListTile(
               leading: Icon(Icons.settings),
               title: Text('Settings'),
               subtitle: Text('change / update settings here'),
               trailing: Icon(Icons.view_list),
-              onTap: () => Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (context) => saleslist())),
+              onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => settingspage())),
+            ),
+            ListTile(
+              leading: Icon(Icons.find_replace),
+              title: Text('Sync Invoice'),
+              onTap: () {
+                sync_all();
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.find_replace),
+              title: Text('Sync Items'),
+              onTap: () {
+                syncitems();
+              },
             ),
           ],
         ),

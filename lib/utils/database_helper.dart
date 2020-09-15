@@ -7,10 +7,11 @@ import 'package:pos_qcs/models/customer.dart';
 import 'package:pos_qcs/models/item.dart';
 import 'package:pos_qcs/models/sales_invoice.dart';
 import 'package:pos_qcs/models/sales_item.dart';
+import 'package:pos_qcs/models/posconfig.dart';
 
 class DatabaseHelper {
-  static const _databaseName = 'qcs_pos3.db';
-  static const _databaseVersion = 3;
+  static const _databaseName = 'qcs_pos4.db';
+  static const _databaseVersion = 4;
 
   DatabaseHelper._();
   static final DatabaseHelper instance = DatabaseHelper._();
@@ -71,6 +72,16 @@ class DatabaseHelper {
         ${SalesInvoice.coloutstandingamount} TEXT
 
 
+      )""");
+
+    await db.execute(""" 
+      CREATE TABLE ${PosConfig.tblPosconfig}(
+        ${PosConfig.colid} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${PosConfig.colurl} TEXT,
+        ${PosConfig.colemail} TEXT,
+        ${PosConfig.colpassword} TEXT,
+        ${PosConfig.colwarehouse} TEXT,
+        ${PosConfig.colcash} TEXT
       )""");
   }
 
@@ -180,5 +191,40 @@ class DatabaseHelper {
   Future<int> deleteallsalesItems() async {
     Database db = await database;
     return await db.delete(SalesItem.tblSalesItem);
+  }
+
+  //Settings
+  Future<int> insertPosConfig(PosConfig posconfig) async {
+    Database db = await database;
+    return await db.insert(PosConfig.tblPosconfig, posconfig.toMap());
+  }
+
+  Future<List<PosConfig>> fetchPosConfigs() async {
+    Database db = await database;
+    List<Map> posconfigs = await db.query(PosConfig.tblPosconfig);
+    return posconfigs.length == 0
+        ? []
+        : posconfigs.map((x) => PosConfig.fromMap(x)).toList();
+  }
+
+  Future<int> updatePosConfig(PosConfig posconfig) async {
+    Database db = await database;
+    return await db.update(PosConfig.tblPosconfig, posconfig.toMap(),
+        where: '${PosConfig.colid}=?', whereArgs: [posconfig.id]);
+  }
+
+  Future<int> deletePosConfig(int id) async {
+    Database db = await database;
+    return await db.delete(PosConfig.tblPosconfig,
+        where: '${PosConfig.colid}=?', whereArgs: [id]);
+  }
+
+  Future<List<PosConfig>> fetchPosConfigurl(String url) async {
+    Database db = await database;
+    List<Map> posconfigs = await db.query(PosConfig.tblPosconfig,
+        where: '${PosConfig.colurl}=?', whereArgs: [url]);
+    return posconfigs.length == 0
+        ? []
+        : posconfigs.map((x) => PosConfig.fromMap(x)).toList();
   }
 }

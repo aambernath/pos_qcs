@@ -2,30 +2,89 @@ import 'package:flutter/cupertino.dart';
 import 'package:pos_qcs/models/item.dart';
 import 'package:pos_qcs/models/sales_invoice.dart';
 import 'package:pos_qcs/models/sales_item.dart';
+import 'package:pos_qcs/models/customer.dart';
 import 'package:pos_qcs/utils/database_helper.dart';
 import 'package:requests/requests.dart';
 import 'dart:convert';
+import 'package:pos_qcs/models/posconfig.dart';
 
 Item _item = Item();
 List<SalesInvoice> _salesinvoices = [];
 List<SalesItem> _salesitems = [];
-
-class Lineitem {
-  String itemname;
-  String qty;
-  String rate;
-
-  Lineitem(this.itemname, this.qty, this.rate);
-
-  @override
-  String toString() {
-    return '{ "item_code":${this.itemname}, "qty":${this.qty}, "rate"${this.rate} }';
-  }
-}
+PosConfig _posconfig = PosConfig();
+List<PosConfig> _posconfigs = [];
+List<Customer> _customers = [];
 
 List lineitems = [];
 
-Future<Requests> fetcherpitem() async {
+sync_all() {
+  syncinvoice();
+}
+
+Future<Requests> syncitems() async {
+  _posconfigs = await DatabaseHelper.instance.fetchPosConfigs();
+
+  String loginurl = _posconfigs[0].url.toString() +
+      "/api/method/login?usr=" +
+      _posconfigs[0].email.toString() +
+      "&pwd=" +
+      _posconfigs[0].password.toString();
+
+  print(loginurl);
+
+  String itemurl = _posconfigs[0].url.toString() +
+      '/api/resource/Item/?fields=["item_code","sale_rate"]';
+  print(itemurl);
+
+  await DatabaseHelper.instance.deleteallItem();
+
+  await Requests.get(loginurl);
+
+  var x = await Requests.get(itemurl);
+
+  var data = jsonDecode(x.content());
+
+  for (int i = 0; i < data["data"].length; i++) {
+    print(data["data"][i]["item_code"]);
+    _item.itemname = data["data"][i]["item_code"];
+    _item.rate = data["data"][i]["sale_rate"].toString();
+    await DatabaseHelper.instance.insertItem(_item);
+  }
+}
+
+Future<Requests> sync_all_customers() async {
+  _posconfigs = await DatabaseHelper.instance.fetchPosConfigs();
+  _customers = await DatabaseHelper.instance.fetchCustomers();
+
+  String loginurl = _posconfigs[0].url.toString() +
+      "/api/method/login?usr=" +
+      _posconfigs[0].email.toString() +
+      "&pwd=" +
+      _posconfigs[0].password.toString();
+
+  print(loginurl);
+
+  String itemurl = _posconfigs[0].url.toString() +
+      '/api/resource/Customer/?fields=["item_code","sale_rate"]';
+  print(itemurl);
+
+  await DatabaseHelper.instance.deleteallItem();
+
+  await Requests.get(loginurl);
+
+  var x = await Requests.get(itemurl);
+
+  var data = jsonDecode(x.content());
+
+  for (int i = 0; i < data["data"].length; i++) {
+    print(data["data"][i]["item_code"]);
+    _item.itemname = data["data"][i]["item_code"];
+    _item.rate = data["data"][i]["sale_rate"].toString();
+    await DatabaseHelper.instance.insertItem(_item);
+  }
+}
+
+Future<Requests> syncinvoice() async {
   await Requests.get(
       'http://157.230.32.98/api/method/login?usr=account@bb.ae&pwd=account_123');
 

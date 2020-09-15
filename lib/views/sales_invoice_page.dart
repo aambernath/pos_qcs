@@ -53,6 +53,9 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
   String _query = "";
   List<Item> _filteritems = [];
 
+  final _ctrlqty = TextEditingController();
+  final _ctrlrate = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -513,6 +516,18 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
                                     double.parse(_salesitems[index].qty))
                                 .toString(),
                         style: new TextStyle(fontSize: 14.0)),
+                    onTap: () async {
+                      setState(() {
+                        _ctrlqty.text = _salesitems[index].qty;
+                        _ctrlrate.text = _salesitems[index].rate;
+                      });
+
+                      final String newText =
+                          await _asyncInputDialog(context, index);
+
+                      setState(() {});
+                      _calculatetotals();
+                    },
                   ),
                 ],
               );
@@ -579,6 +594,52 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
           ],
         ),
       );
+
+  //qty rate editting form
+
+  Future<String> _asyncInputDialog(BuildContext context, index) async {
+    String sampleText = '';
+    return showDialog<String>(
+      context: context,
+      barrierDismissible:
+          false, // dialog is dismissible with a tap on the barrier
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Qty or Rate'),
+          content: new Row(
+            children: <Widget>[
+              new Expanded(
+                  child: new TextField(
+                autofocus: true,
+                controller: _ctrlqty,
+                decoration: new InputDecoration(labelText: 'QTY'),
+                onChanged: (value) {
+                  _salesitems[index].qty = value;
+                },
+              )),
+              new Expanded(
+                  child: new TextField(
+                autofocus: true,
+                controller: _ctrlrate,
+                decoration: new InputDecoration(labelText: 'Rate'),
+                onChanged: (value) {
+                  _salesitems[index].rate = value;
+                },
+              ))
+            ],
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Ok'),
+              onPressed: () {
+                Navigator.of(context).pop(sampleText);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   //Create a SearchView
   Widget _createSearchView() {

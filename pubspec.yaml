@@ -37,11 +37,15 @@ dependencies:
   http: ^0.12.2
   dio: ^3.0.9
   requests: ^3.3.0
+  shared_preferences: ^0.5.8
   
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+assets:
+  -assets/    
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
