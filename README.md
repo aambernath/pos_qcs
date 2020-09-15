@@ -1,6 +1,7 @@
 # pos_qcs
 
-A new Flutter project.
+Offline Simple Pos on flutter with sqflite which calls erpnext API to sync data. Please note that this was a learning project and not meant for production
+
 
 ## Getting Started
 
