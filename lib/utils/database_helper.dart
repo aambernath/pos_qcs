@@ -8,6 +8,7 @@ import 'package:pos_qcs/models/item.dart';
 import 'package:pos_qcs/models/sales_invoice.dart';
 import 'package:pos_qcs/models/sales_item.dart';
 import 'package:pos_qcs/models/posconfig.dart';
+import 'package:pos_qcs/models/item_price.dart';
 
 class DatabaseHelper {
   static const _databaseName = 'qcs_pos4.db';
@@ -38,7 +39,9 @@ class DatabaseHelper {
         ${Customer.colmobile} TEXT,
         ${Customer.colcontactname} TEXT,
         ${Customer.coltrn} TEXT,
-        ${Customer.colterritory} TEXT
+        ${Customer.colterritory} TEXT,
+        ${Customer.colpricelist} TEXT,
+        ${Customer.collocalcust} INTEGER
       )''');
 
     await db.execute(""" 
@@ -47,6 +50,14 @@ class DatabaseHelper {
         ${Item.colitemname} TEXT,
         ${Item.colqty} TEXT,
         ${Item.colrate} TEXT
+      )""");
+
+    await db.execute(""" 
+      CREATE TABLE ${ItemPrice.tblItemPrice}(
+        ${ItemPrice.colid} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${ItemPrice.colitemname} TEXT,
+        ${ItemPrice.colpricelist} TEXT,
+        ${ItemPrice.colrate} TEXT
       )""");
 
     await db.execute(""" 
@@ -109,6 +120,11 @@ class DatabaseHelper {
     Database db = await database;
     return await db.delete(Customer.tblCustomer,
         where: '${Customer.colid}=?', whereArgs: [id]);
+  }
+
+  Future<int> deleteallCustomer() async {
+    Database db = await database;
+    return await db.delete(Customer.tblCustomer);
   }
 
   //Sales Head
@@ -182,6 +198,41 @@ class DatabaseHelper {
 
     return list;
   }
+
+  //Price List
+
+  Future<int> insertItemPrice(ItemPrice itemPrice) async {
+    Database db = await database;
+    return await db.insert(ItemPrice.tblItemPrice, itemPrice.toMap());
+  }
+
+  Future<int> deleteallItemPrice() async {
+    Database db = await database;
+    return await db.delete(ItemPrice.tblItemPrice);
+  }
+
+  Future<List<ItemPrice>> fetchItemprices() async {
+    Database db = await database;
+    List<Map> items = await db.query(ItemPrice.tblItemPrice);
+    return items.length == 0
+        ? []
+        : items.map((x) => ItemPrice.fromMap(x)).toList();
+  }
+
+  Future<List<ItemPrice>> searchItemPrice(String item, String pricelist) async {
+    print(item);
+    print(pricelist);
+    Database db = await database;
+    List<Map> res = await db.rawQuery(
+        "SELECT * FROM itemprices WHERE itemname =? and pricelist=?",
+        [item, pricelist]);
+    List<ItemPrice> list =
+        res.isNotEmpty ? res.map((c) => ItemPrice.fromMap(c)).toList() : [];
+
+    return list;
+  }
+
+  // Sales Invoice Items
 
   Future<int> deleteallsalesInvoice() async {
     Database db = await database;

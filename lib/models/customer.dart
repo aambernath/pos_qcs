@@ -6,6 +6,8 @@ class Customer {
   static const colcontactname = 'contactname';
   static const coltrn = 'trn';
   static const colterritory = 'territory';
+  static const colpricelist = 'pricelist';
+  static const collocalcust = 'localcust';
 
   Customer(
       {this.id,
@@ -13,7 +15,9 @@ class Customer {
       this.mobile,
       this.contactname,
       this.trn,
-      this.territory});
+      this.territory,
+      this.pricelist,
+      this.localcust});
 
   int id;
   String name;
@@ -21,6 +25,8 @@ class Customer {
   String contactname;
   String trn;
   String territory;
+  String pricelist;
+  int localcust;
 
   Customer.fromMap(Map<String, dynamic> map) {
     id = map[colid];
@@ -29,6 +35,8 @@ class Customer {
     contactname = map[colcontactname];
     trn = map[coltrn];
     territory = map[colterritory];
+    pricelist = map[colpricelist];
+    localcust = map[collocalcust];
   }
 
   Map<String, dynamic> toMap() {
@@ -37,7 +45,9 @@ class Customer {
       colmobile: mobile,
       colcontactname: contactname,
       coltrn: trn,
-      colterritory: territory
+      colterritory: territory,
+      colpricelist: pricelist,
+      collocalcust: localcust
     };
     if (id != null) map[colid] = id;
     return map;

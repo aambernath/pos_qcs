@@ -6,6 +6,7 @@ import 'package:pos_qcs/utils/database_helper.dart';
 import 'package:pos_qcs/views/sales_invoice_page.dart';
 import 'package:pos_qcs/models/posconfig.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pos_qcs/utils/sync_helper.dart';
 
 class settingspage extends StatefulWidget {
   settingspage({Key key, this.title}) : super(key: key);
@@ -36,6 +37,7 @@ class _settingspageState extends State<settingspage> {
   PosConfig _posconfig = PosConfig();
   DatabaseHelper _dbHelper;
   List<PosConfig> _posconfigs = [];
+  String data;
 
   @override
   void initState() {
@@ -105,6 +107,47 @@ class _settingspageState extends State<settingspage> {
                   ),
                 )
               ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: RaisedButton(
+                    onPressed: () => _alert_item_sync(),
+                    child: Text('Sync Items'),
+                    color: Colors.pink,
+                    textColor: Colors.white,
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: RaisedButton(
+                    onPressed: () => _alert_customer_sync(),
+                    child: Text('Sync Customers'),
+                    color: Colors.blue,
+                    textColor: Colors.white,
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: RaisedButton(
+                    onPressed: () => _alert_price_sync(),
+                    child: Text('Sync Item Price'),
+                    color: Colors.deepOrangeAccent,
+                    textColor: Colors.white,
+                  ),
+                )
+              ],
+            ),
+            Row(
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text(data.toString()),
+                )
+              ],
             )
           ],
         ),
@@ -119,6 +162,33 @@ class _settingspageState extends State<settingspage> {
       await _dbHelper.updatePosConfig(_posconfig);
     _refreshposconfigList();
     form.reset();
+  }
+
+  _alert_price_sync() async {
+    var code = await syncitemprices();
+    print(code);
+    if (code == 200)
+      setState(() => data = "Item Price Sync Success");
+    else
+      print("Item Price Sync Error");
+  }
+
+  _alert_item_sync() async {
+    var code = await syncitems();
+    print(code);
+    if (code == 200)
+      setState(() => data = "Item Sync Success");
+    else
+      print("Item Sync Error");
+  }
+
+  _alert_customer_sync() async {
+    var code = await sync_all_customers();
+    print(code);
+    if (code == 200)
+      setState(() => data = "Customer Sync Success");
+    else
+      print("Customer Sync Error");
   }
 
   _refreshposconfigList() async {

@@ -38,6 +38,7 @@ dependencies:
   dio: ^3.0.9
   requests: ^3.3.0
   shared_preferences: ^0.5.8
+  rflutter_alert: ^1.1.0
   
 
 dev_dependencies:

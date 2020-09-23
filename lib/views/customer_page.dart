@@ -30,9 +30,15 @@ class _customerlistState extends State<customerlist> {
   final _ctrlcontactname = TextEditingController();
   final _ctrltrn = TextEditingController();
   final _ctrlterritory = TextEditingController();
+  final _ctrlpricelist = TextEditingController();
   Customer _customer = Customer();
   DatabaseHelper _dbHelper;
   List<Customer> _customers = [];
+
+  var _searchview = new TextEditingController();
+  bool _firstSearch = true;
+  String _query = "";
+  List<Customer> _filteritems = [];
 
   @override
   void initState() {
@@ -52,7 +58,12 @@ class _customerlistState extends State<customerlist> {
         // in the middle of the parent.
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[_form(), _list()],
+          children: <Widget>[
+            _form(),
+            //_list(),
+            _createSearchView(),
+            _firstSearch ? _createListView() : _performSearch()
+          ],
         ),
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
@@ -71,26 +82,18 @@ class _customerlistState extends State<customerlist> {
               onSaved: (val) => setState(() => _customer.name = val),
             ),
             TextFormField(
-              controller: _ctrlmobile,
-              decoration: InputDecoration(labelText: 'Mobile'),
-              onSaved: (val) => setState(() => _customer.mobile = val),
-            ),
-            TextFormField(
-              controller: _ctrlcontactname,
-              decoration: InputDecoration(labelText: 'Contact Name'),
-              onSaved: (val) => setState(() => _customer.contactname = val),
-            ),
-            TextFormField(
               controller: _ctrltrn,
               decoration: InputDecoration(labelText: 'TRN'),
               onSaved: (val) => setState(() => _customer.trn = val),
             ),
             TextFormField(
-              controller: _ctrlterritory,
-              decoration: InputDecoration(labelText: 'Territory'),
-              onSaved: (val) => setState(() => _customer.territory = val),
+              controller: _ctrlmobile,
+              decoration: InputDecoration(labelText: 'Mobile'),
+              onSaved: (val) => setState(() => _customer.mobile = val),
             ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Container(
                   margin: EdgeInsets.all(10.0),
@@ -133,12 +136,15 @@ class _customerlistState extends State<customerlist> {
   _onSave() async {
     var form = _formKey.currentState;
     form.save();
-    if (_customer.id == null)
+
+    if (_customer.id == null) {
+      _customer.localcust = 1;
       await _dbHelper.insertCustomer(_customer);
-    else
+    } else {
       await _dbHelper.updateCustomer(_customer);
-    _refreshCustomerList();
-    form.reset();
+      _refreshCustomerList();
+      form.reset();
+    }
   }
 
   _list() => Expanded(
@@ -188,4 +194,117 @@ class _customerlistState extends State<customerlist> {
           ),
         ),
       );
+
+  _customerlistState() {
+    //Register a closure to be called when the object changes.
+    _searchview.addListener(() {
+      if (_searchview.text.isEmpty) {
+        //Notify the framework that the internal state of this object has changed.
+        setState(() {
+          _firstSearch = true;
+          _query = "";
+        });
+      } else {
+        setState(() {
+          _firstSearch = false;
+          _query = _searchview.text;
+        });
+      }
+    });
+  }
+
+  //Create a SearchView
+  Widget _createSearchView() {
+    return new Container(
+      decoration: BoxDecoration(border: Border.all(width: 1.0)),
+      child: new TextField(
+        controller: _searchview,
+        decoration: InputDecoration(
+          hintText: "Search",
+          hintStyle: new TextStyle(color: Colors.grey[300]),
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  //Create a ListView widget
+  Widget _createListView() {
+    return new Flexible(
+      child: new ListView.builder(
+          itemCount: _customers.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Column(
+              children: <Widget>[
+                ListTile(
+                  leading: Icon(Icons.add),
+                  title: new Text(
+                    _customers[index].name.toString(),
+                    style: new TextStyle(fontSize: 14.0),
+                  ),
+                  subtitle: new Text(_customers[index].pricelist.toString(),
+                      style: new TextStyle(fontSize: 14.0)),
+                  onTap: () {
+                    setState(() {
+                      _customer = _customers[index];
+                      _ctrlcustomername.text = _customers[index].name;
+                      _ctrlmobile.text = _customers[index].mobile;
+                      _ctrlcontactname.text = _customers[index].contactname;
+                      _ctrltrn.text = _customers[index].trn;
+                      _ctrlterritory.text = _customers[index].territory;
+                      _ctrlpricelist.text = _customers[index].pricelist;
+                    });
+                  },
+                ),
+              ],
+            );
+          }),
+    );
+  }
+
+  //Perform actual search
+  Widget _performSearch() {
+    _filteritems = new List<Customer>();
+    for (int i = 0; i < _customers.length; i++) {
+      var item = _customers[i];
+
+      if (item.name.toLowerCase().contains(_query.toLowerCase())) {
+        _filteritems.add(item);
+      }
+    }
+    return _createFilteredListView();
+  }
+
+  Widget _createFilteredListView() {
+    return new Flexible(
+      child: new ListView.builder(
+          itemCount: _filteritems.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Column(
+              children: <Widget>[
+                ListTile(
+                  leading: Icon(Icons.add),
+                  title: new Text(
+                    _filteritems[index].name.toString(),
+                    style: new TextStyle(fontSize: 14.0),
+                  ),
+                  trailing: new Text(_filteritems[index].pricelist.toString(),
+                      style: new TextStyle(fontSize: 14.0)),
+                  onTap: () {
+                    setState(() {
+                      _customer = _filteritems[index];
+                      _ctrlcustomername.text = _filteritems[index].name;
+                      _ctrlmobile.text = _filteritems[index].mobile;
+                      _ctrlcontactname.text = _filteritems[index].contactname;
+                      _ctrltrn.text = _filteritems[index].trn;
+                      _ctrlterritory.text = _filteritems[index].territory;
+                      _ctrlpricelist.text = _filteritems[index].pricelist;
+                    });
+                  },
+                ),
+              ],
+            );
+          }),
+    );
+  }
 }

@@ -7,6 +7,7 @@ import 'package:pos_qcs/models/sales_invoice.dart';
 import 'package:pos_qcs/models/sales_item.dart';
 import 'package:pos_qcs/models/item.dart';
 import 'package:pos_qcs/models/customer.dart';
+import 'package:pos_qcs/models/item_price.dart';
 import 'package:pos_qcs/utils/database_helper.dart';
 import 'package:esc_pos_bluetooth/esc_pos_bluetooth.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart';
@@ -180,6 +181,10 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
     ]);
 
     for (int i = 0; i < _salesitems.length; i++) {
+      String total =
+          (double.parse(_salesitems[i].qty) * double.parse(_salesitems[i].rate))
+              .toString();
+
       ticket.row([
         PosColumn(text: _salesitems[i].itemname, width: 7),
         PosColumn(text: _salesitems[i].qty, width: 1),
@@ -188,9 +193,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
             width: 2,
             styles: PosStyles(align: PosAlign.right)),
         PosColumn(
-            text: _salesitems[i].qty,
-            width: 2,
-            styles: PosStyles(align: PosAlign.right)),
+            text: total, width: 2, styles: PosStyles(align: PosAlign.right)),
       ]);
     }
 
@@ -673,34 +676,78 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
                   trailing: new Text(
                       "Rate: AED " + _items[index].rate.toString(),
                       style: new TextStyle(fontSize: 14.0)),
-                  onTap: () {
-                    var flag = 1;
-                    SalesItem nval = SalesItem(
-                        itemname: _items[index].itemname,
-                        rate: _items[index].rate,
-                        qty: "1");
-                    for (var i = 0; i < _salesitems.length; i++) {
-                      if (_salesitems[i].itemname == _items[index].itemname) {
-                        setState(() {
-                          _salesitems[i].qty =
-                              (double.parse(_salesitems[i].qty) + 1).toString();
-                        });
-
-                        flag = 0;
-                      }
-                    }
-                    if (flag == 1) {
-                      setState(() {
-                        _salesitems.add(nval);
-                      });
-                    }
-                    _calculatetotals();
-                  },
+                  onTap: () => _addlineitem(index),
                 ),
               ],
             );
           }),
     );
+  }
+
+  _addfilterlineitem(index) async {
+    var flag = 1;
+    var rrate;
+
+    List<ItemPrice> p_rate = await _dbHelper.searchItemPrice(
+        _filteritems[index].itemname, _customer.pricelist);
+    //print(p_rate[0].rate);
+    if (p_rate.isNotEmpty) {
+      rrate = p_rate[0].rate;
+    } else {
+      rrate = _filteritems[index].rate;
+    }
+
+    SalesItem nval = SalesItem(
+        itemname: _filteritems[index].itemname, rate: rrate, qty: "1");
+    for (var i = 0; i < _salesitems.length; i++) {
+      if (_salesitems[i].itemname == _filteritems[index].itemname) {
+        setState(() {
+          _salesitems[i].qty =
+              (double.parse(_salesitems[i].qty) + 1).toString();
+        });
+
+        flag = 0;
+      }
+    }
+    if (flag == 1) {
+      setState(() {
+        _salesitems.add(nval);
+      });
+    }
+    _calculatetotals();
+  }
+
+  _addlineitem(index) async {
+    var flag = 1;
+    var rrate;
+
+    List<ItemPrice> p_rate = await _dbHelper.searchItemPrice(
+        _items[index].itemname, _customer.pricelist);
+    //print(p_rate[0].rate);
+    if (p_rate.isEmpty) {
+      rrate = _items[index].rate;
+    } else {
+      rrate = p_rate[0].rate;
+    }
+
+    SalesItem nval =
+        SalesItem(itemname: _items[index].itemname, rate: rrate, qty: "1");
+    for (var i = 0; i < _salesitems.length; i++) {
+      if (_salesitems[i].itemname == _items[index].itemname) {
+        setState(() {
+          _salesitems[i].qty =
+              (double.parse(_salesitems[i].qty) + 1).toString();
+        });
+
+        flag = 0;
+      }
+    }
+    if (flag == 1) {
+      setState(() {
+        _salesitems.add(nval);
+      });
+    }
+    _calculatetotals();
   }
 
   //Perform actual search
@@ -732,30 +779,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
                   trailing: new Text(
                       "Rate: AED " + _filteritems[index].rate.toString(),
                       style: new TextStyle(fontSize: 14.0)),
-                  onTap: () {
-                    var flag = 1;
-                    SalesItem nval = SalesItem(
-                        itemname: _filteritems[index].itemname,
-                        rate: _filteritems[index].rate,
-                        qty: "1");
-                    for (var i = 0; i < _salesitems.length; i++) {
-                      if (_salesitems[i].itemname ==
-                          _filteritems[index].itemname) {
-                        setState(() {
-                          _salesitems[i].qty =
-                              (double.parse(_salesitems[i].qty) + 1).toString();
-                        });
-
-                        flag = 0;
-                      }
-                    }
-                    if (flag == 1) {
-                      setState(() {
-                        _salesitems.add(nval);
-                      });
-                    }
-                    _calculatetotals();
-                  },
+                  onTap: () => _addfilterlineitem(index),
                 ),
               ],
             );

@@ -22,8 +22,8 @@ class DrawerNavigation extends StatelessWidget {
           children: <Widget>[
             UserAccountsDrawerHeader(
               currentAccountPicture: CircleAvatar(
-                backgroundImage: NetworkImage(
-                    'https://i.ytimg.com/vi/Hcs9bqNsAFU/maxresdefault.jpg'),
+                backgroundImage:
+                    NetworkImage('http://157.230.32.98/files/bb_logo.jpg'),
               ),
               accountName: Text('Beirut Bakery'),
               //accountEmail: Text('getemail().toString()'),
@@ -65,14 +65,14 @@ class DrawerNavigation extends StatelessWidget {
               leading: Icon(Icons.find_replace),
               title: Text('Sync Invoice'),
               onTap: () {
-                sync_all();
+                syncinvoice();
               },
             ),
             ListTile(
               leading: Icon(Icons.find_replace),
               title: Text('Sync Items'),
               onTap: () {
-                syncitems();
+                pushlocalcust();
               },
             ),
           ],
