@@ -130,10 +130,13 @@ sync_all_customers() async {
   return x.statusCode;
 }
 
-Future<Requests> syncinvoice() async {
+syncinvoice() async {
   _salesinvoices = await DatabaseHelper.instance.fetchSalesInvoices();
   _salesitems = await DatabaseHelper.instance.fetchSalesItems();
   _posconfigs = await DatabaseHelper.instance.fetchPosConfigs();
+
+  //var ret = await pushlocalcust();
+  //print(ret);
 
   String loginurl = _posconfigs[0].url.toString() +
       "/api/method/login?usr=" +
@@ -148,6 +151,9 @@ Future<Requests> syncinvoice() async {
   Map<String, dynamic> fdata;
 
   List<Map<String, dynamic>> te = [];
+
+  var statuscode;
+  await pushlocalcust();
 
   for (int i = 0; i < _salesinvoices.length; i++) {
     for (int j = 0; j < _salesitems.length; j++) {
@@ -164,6 +170,7 @@ Future<Requests> syncinvoice() async {
       "naming_series": "ACC-SINV-.YYYY.-",
       "customer": "${_salesinvoices[i].customer}",
       "is_pos": "1",
+      "pos_id": "${_salesinvoices[i].id}",
       "company": "Beirut Automatic Bakery (L.L.C)",
       "update_stock": "1",
       "set_warehouse": "${_posconfigs[0].warehouse}",
@@ -196,12 +203,20 @@ Future<Requests> syncinvoice() async {
         json: {"data": hdata},
         bodyEncoding: RequestBodyEncoding.JSON);
 
+    statuscode = response2.statusCode;
     debugPrint(response2.content());
+    print(statuscode);
   }
-  await DatabaseHelper.instance.deleteallsalesInvoice();
+  print(statuscode);
+  if (statuscode != null) {
+    if (statuscode == 200) {
+      await DatabaseHelper.instance.deleteallsalesInvoice();
+      return statuscode;
+    }
+  }
 }
 
-Future<Requests> pushlocalcust() async {
+pushlocalcust() async {
   String loginurl = _posconfigs[0].url.toString() +
       "/api/method/login?usr=" +
       _posconfigs[0].email.toString() +
@@ -220,6 +235,8 @@ Future<Requests> pushlocalcust() async {
 
   List<Map<String, dynamic>> te = [];
 
+  var response2;
+
   for (int i = 0; i < _customers.length; i++) {
     if (_customers[i].localcust == 1) {
       hdata = {
@@ -235,10 +252,13 @@ Future<Requests> pushlocalcust() async {
       String jsondata = fdata.toString();
       print(jsondata);
 
-      var response2 = await Requests.post(itemurl,
+      response2 = await Requests.post(itemurl,
           json: {"data": hdata}, bodyEncoding: RequestBodyEncoding.JSON);
 
       debugPrint(response2.content());
+
+      _customers[i].localcust = 0;
+      await DatabaseHelper.instance.updateCustomer(_customers[i]);
     }
   }
 }

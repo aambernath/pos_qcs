@@ -12,6 +12,7 @@ import 'package:pos_qcs/utils/database_helper.dart';
 import 'package:esc_pos_bluetooth/esc_pos_bluetooth.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart';
 import 'package:oktoast/oktoast.dart';
+import 'package:pos_qcs/models/posconfig.dart';
 
 class salesinvoicelist extends StatefulWidget {
   final String title;
@@ -35,6 +36,9 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
   DatabaseHelper _dbHelper;
   List<Item> _items = [];
   Customer _customer = Customer();
+  List<PosConfig> _posconfigs = [];
+  var salesinvoiceid;
+
   SalesInvoice _salesInvoice = SalesInvoice(
       net: "0",
       vat: "0",
@@ -61,6 +65,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
   void initState() {
     super.initState();
     _dbHelper = DatabaseHelper.instance;
+
     _refreshItemList();
     scrollController = ScrollController()
       ..addListener(() {
@@ -150,10 +155,12 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
     final PosPrintResult res =
         await printerManager.printTicket(await demoReceipt(paper));
     showToast(res.msg);
+    Navigator.of(context, rootNavigator: true).pop();
   }
 
   Future<Ticket> demoReceipt(PaperSize paper) async {
     final Ticket ticket = Ticket(paper);
+    _posconfigs = await DatabaseHelper.instance.fetchPosConfigs();
 
     ticket.text('Beirut Automatic Bakery',
         styles: PosStyles(
@@ -166,8 +173,17 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
     ticket.text('Industrial Area 2', styles: PosStyles(align: PosAlign.center));
     ticket.text('Al Quoz, Dubai', styles: PosStyles(align: PosAlign.center));
     ticket.text('Tel: +97143387804', styles: PosStyles(align: PosAlign.center));
-    ticket.text('TRN:',
+    ticket.text('TRN: 100393295900003',
         styles: PosStyles(align: PosAlign.center), linesAfter: 1);
+    ticket.row([
+      PosColumn(text: 'Invoice No :', width: 4),
+      PosColumn(text: "${_posconfigs[0].warehouse}", width: 4),
+      PosColumn(text: ' - ', width: 2),
+      PosColumn(
+          text: salesinvoiceid.toString(),
+          width: 2,
+          styles: PosStyles(align: PosAlign.left))
+    ]);
 
     ticket.hr();
 
@@ -185,16 +201,32 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
           (double.parse(_salesitems[i].qty) * double.parse(_salesitems[i].rate))
               .toString();
 
-      ticket.row([
-        PosColumn(text: _salesitems[i].itemname, width: 7),
-        PosColumn(text: _salesitems[i].qty, width: 1),
-        PosColumn(
-            text: _salesitems[i].rate,
-            width: 2,
-            styles: PosStyles(align: PosAlign.right)),
-        PosColumn(
-            text: total, width: 2, styles: PosStyles(align: PosAlign.right)),
-      ]);
+      if (_salesitems[i].itemname.length >= 18) {
+        ticket.row([
+          PosColumn(text: _salesitems[i].itemname, width: 12),
+        ]);
+        ticket.row([
+          PosColumn(text: "", width: 7),
+          PosColumn(text: _salesitems[i].qty, width: 1),
+          PosColumn(
+              text: _salesitems[i].rate,
+              width: 2,
+              styles: PosStyles(align: PosAlign.right)),
+          PosColumn(
+              text: total, width: 2, styles: PosStyles(align: PosAlign.right)),
+        ]);
+      } else {
+        ticket.row([
+          PosColumn(text: _salesitems[i].itemname, width: 7),
+          PosColumn(text: _salesitems[i].qty, width: 1),
+          PosColumn(
+              text: _salesitems[i].rate,
+              width: 2,
+              styles: PosStyles(align: PosAlign.right)),
+          PosColumn(
+              text: total, width: 2, styles: PosStyles(align: PosAlign.right)),
+        ]);
+      }
     }
 
     ticket.hr();
@@ -371,14 +403,15 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
           labelStyle: TextStyle(fontWeight: FontWeight.w500),
           labelBackgroundColor: Colors.green,
         ),
-        SpeedDialChild(
-          child: Icon(Icons.print, color: Colors.white),
-          backgroundColor: Colors.deepOrange,
-          onTap: () => _showMyDialog(),
-          label: 'Print',
-          labelStyle: TextStyle(fontWeight: FontWeight.w500),
-          labelBackgroundColor: Colors.deepOrangeAccent,
-        ),
+        if (salesinvoiceid != null)
+          SpeedDialChild(
+            child: Icon(Icons.print, color: Colors.white),
+            backgroundColor: Colors.deepOrange,
+            onTap: () => _showMyDialog(),
+            label: 'Print',
+            labelStyle: TextStyle(fontWeight: FontWeight.w500),
+            labelBackgroundColor: Colors.deepOrangeAccent,
+          ),
       ],
     );
   }
@@ -448,7 +481,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
         DateFormat('kk:mm:ss \n EEE d MMM').format(DateTime.now());
     _salesInvoice.paidamount = _paidcontroller.text.toString();
 
-    var salesinvoiceid = await _dbHelper.insertSalesInvoice(_salesInvoice);
+    salesinvoiceid = await _dbHelper.insertSalesInvoice(_salesInvoice);
     print(salesinvoiceid);
     for (int i = 0; i < _salesitems.length; i++) {
       _salesitems[i].salesinvoiceid = salesinvoiceid;
@@ -531,6 +564,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
                       setState(() {});
                       _calculatetotals();
                     },
+                    onLongPress: () => _deletelineitem(index),
                   ),
                 ],
               );
@@ -539,6 +573,13 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
           )),
         ),
       );
+
+  _deletelineitem(index) {
+    print("longpress");
+    _salesitems.removeAt(index);
+    _calculatetotals();
+    setState(() {});
+  }
 
   _totalfooter() => Card(
       child: Container(
@@ -688,8 +729,13 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
     var flag = 1;
     var rrate;
 
-    List<ItemPrice> p_rate = await _dbHelper.searchItemPrice(
-        _filteritems[index].itemname, _customer.pricelist);
+    List<ItemPrice> p_rate = [];
+
+    print(_customer.pricelist);
+    if (_customer.pricelist != null) {
+      p_rate = await _dbHelper.searchItemPrice(
+          _items[index].itemname, _customer.pricelist);
+    }
     //print(p_rate[0].rate);
     if (p_rate.isNotEmpty) {
       rrate = p_rate[0].rate;
@@ -720,9 +766,13 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
   _addlineitem(index) async {
     var flag = 1;
     var rrate;
+    List<ItemPrice> p_rate = [];
 
-    List<ItemPrice> p_rate = await _dbHelper.searchItemPrice(
-        _items[index].itemname, _customer.pricelist);
+    print(_customer.pricelist);
+    if (_customer.pricelist != null) {
+      p_rate = await _dbHelper.searchItemPrice(
+          _items[index].itemname, _customer.pricelist);
+    }
     //print(p_rate[0].rate);
     if (p_rate.isEmpty) {
       rrate = _items[index].rate;

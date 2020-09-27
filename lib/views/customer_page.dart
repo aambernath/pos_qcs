@@ -242,7 +242,7 @@ class _customerlistState extends State<customerlist> {
                     _customers[index].name.toString(),
                     style: new TextStyle(fontSize: 14.0),
                   ),
-                  subtitle: new Text(_customers[index].pricelist.toString(),
+                  subtitle: new Text(_customers[index].trn.toString(),
                       style: new TextStyle(fontSize: 14.0)),
                   onTap: () {
                     setState(() {
@@ -288,7 +288,7 @@ class _customerlistState extends State<customerlist> {
                     _filteritems[index].name.toString(),
                     style: new TextStyle(fontSize: 14.0),
                   ),
-                  trailing: new Text(_filteritems[index].pricelist.toString(),
+                  trailing: new Text(_filteritems[index].trn.toString(),
                       style: new TextStyle(fontSize: 14.0)),
                   onTap: () {
                     setState(() {

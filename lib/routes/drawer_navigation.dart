@@ -55,25 +55,11 @@ class DrawerNavigation extends StatelessWidget {
             ),
             ListTile(
               leading: Icon(Icons.settings),
-              title: Text('Settings'),
-              subtitle: Text('change / update settings here'),
+              title: Text('Settings & Sync'),
+              subtitle: Text('set user details & sync'),
               trailing: Icon(Icons.view_list),
               onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => settingspage())),
-            ),
-            ListTile(
-              leading: Icon(Icons.find_replace),
-              title: Text('Sync Invoice'),
-              onTap: () {
-                syncinvoice();
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.find_replace),
-              title: Text('Sync Items'),
-              onTap: () {
-                pushlocalcust();
-              },
             ),
           ],
         ),

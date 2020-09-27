@@ -74,31 +74,76 @@ class _saleslistState extends State<saleslist> {
         key: _formKey,
         child: Column(
           children: <Widget>[
-            TextFormField(
-              controller: _ctrlcustomer,
-              decoration: InputDecoration(labelText: 'Customer Name'),
-              onSaved: (val) => setState(() => salesInvoice.customer = val),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text("Customer:"),
+                ),
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text(_ctrlcustomer.text),
+                )
+              ],
             ),
-            TextFormField(
-              controller: _ctrlpostingdate,
-              decoration: InputDecoration(labelText: 'Date'),
-              onSaved: (val) => setState(() => salesInvoice.postingdate = val),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text("Date:"),
+                ),
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text(_ctrlpostingdate.text),
+                )
+              ],
             ),
-            TextFormField(
-              controller: _ctrlpaidamount,
-              decoration: InputDecoration(labelText: 'Paid Amount'),
-              onSaved: (val) => setState(() => salesInvoice.paidamount = val),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text("Paid Amount:"),
+                ),
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text(_ctrlpaidamount.text),
+                )
+              ],
             ),
-            TextFormField(
-              controller: _ctrlgrandtotal,
-              decoration: InputDecoration(labelText: 'Grand Total'),
-              onSaved: (val) => setState(() => salesInvoice.grandtotal = val),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text("Total:"),
+                ),
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text(_ctrlgrandtotal.text),
+                )
+              ],
             ),
-            TextFormField(
-              controller: _ctrlvat,
-              decoration: InputDecoration(labelText: 'Vat'),
-              onSaved: (val) => setState(() => salesInvoice.vat = val),
-            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text("VAT:"),
+                ),
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: Text(_ctrlvat.text),
+                )
+              ],
+            )
           ],
         ),
       ));

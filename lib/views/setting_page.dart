@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:connectivity/connectivity.dart';
 
 import 'package:pos_qcs/models/customer.dart';
 import 'package:pos_qcs/utils/database_helper.dart';
@@ -7,6 +8,7 @@ import 'package:pos_qcs/views/sales_invoice_page.dart';
 import 'package:pos_qcs/models/posconfig.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pos_qcs/utils/sync_helper.dart';
+import 'package:esc_pos_bluetooth/esc_pos_bluetooth.dart';
 
 class settingspage extends StatefulWidget {
   settingspage({Key key, this.title}) : super(key: key);
@@ -34,16 +36,49 @@ class _settingspageState extends State<settingspage> {
   final _ctrlwarehouse = TextEditingController();
   final _ctrlcash = TextEditingController();
 
+  PrinterBluetoothManager printerManager = PrinterBluetoothManager();
+  List<PrinterBluetooth> _devices = [];
+
   PosConfig _posconfig = PosConfig();
   DatabaseHelper _dbHelper;
   List<PosConfig> _posconfigs = [];
   String data;
+
+  var wifiBSSID;
+  var wifiIP;
+  var wifiName;
+  bool iswificonnected = false;
+  bool isInternetOn = true;
 
   @override
   void initState() {
     super.initState();
     _dbHelper = DatabaseHelper.instance;
     _refreshposconfigList();
+    GetConnect();
+    if (isInternetOn) {
+      setState(() => data = "Internet available");
+    } else {
+      setState(() => data = "Internet Not available");
+    }
+
+    printerManager.scanResults.listen((devices) async {
+      // print('UI: Devices found ${devices.length}');
+      setState(() {
+        _devices = devices;
+      });
+    });
+  }
+
+  void _startScanDevices() {
+    setState(() {
+      _devices = [];
+    });
+    printerManager.startScan(Duration(seconds: 4));
+  }
+
+  void _stopScanDevices() {
+    printerManager.stopScan();
   }
 
   @override
@@ -52,6 +87,7 @@ class _settingspageState extends State<settingspage> {
       appBar: AppBar(
         title: Text("Settings"),
       ),
+
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
@@ -62,6 +98,21 @@ class _settingspageState extends State<settingspage> {
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  void GetConnect() async {
+    print("test");
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        isInternetOn = false;
+      });
+    } else if (connectivityResult == ConnectivityResult.mobile) {
+      iswificonnected = false;
+    } else if (connectivityResult == ConnectivityResult.wifi) {
+      iswificonnected = true;
+      print(iswificonnected);
+    }
   }
 
   _form() => Container(
@@ -138,6 +189,21 @@ class _settingspageState extends State<settingspage> {
                     color: Colors.deepOrangeAccent,
                     textColor: Colors.white,
                   ),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.all(10.0),
+                  child: RaisedButton(
+                    onPressed: () => _alert_invoice_sync(),
+                    child: Text('Sync Current Invoices'),
+                    color: Colors.deepPurpleAccent,
+                    textColor: Colors.white,
+                  ),
                 )
               ],
             ),
@@ -154,6 +220,7 @@ class _settingspageState extends State<settingspage> {
       ));
 
   _onSave() async {
+    GetConnect();
     var form = _formKey.currentState;
     form.save();
     if (_posconfig.id == null)
@@ -182,13 +249,32 @@ class _settingspageState extends State<settingspage> {
       print("Item Sync Error");
   }
 
+  _alert_invoice_sync() async {
+    if (isInternetOn) {
+      setState(() => data = "Internet available..Syncing");
+      var code = await syncinvoice();
+      print(code);
+      if (code == 200)
+        setState(() => data = "Invoice Sync Success");
+      else
+        print("Invoice Sync Error");
+    } else {
+      setState(() => data = "No Internet");
+    }
+  }
+
   _alert_customer_sync() async {
-    var code = await sync_all_customers();
-    print(code);
-    if (code == 200)
-      setState(() => data = "Customer Sync Success");
-    else
-      print("Customer Sync Error");
+    if (isInternetOn) {
+      setState(() => data = "Internet available..Syncing");
+      var code = await sync_all_customers();
+      print(code);
+      if (code == 200)
+        setState(() => data = "Customer Sync Success");
+      else
+        print("Customer Sync Error");
+    } else {
+      setState(() => data = "No Internet");
+    }
   }
 
   _refreshposconfigList() async {
