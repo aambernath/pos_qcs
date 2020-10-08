@@ -145,6 +145,7 @@ class _customerlistState extends State<customerlist> {
       _refreshCustomerList();
       form.reset();
     }
+    _refreshCustomerList();
   }
 
   _list() => Expanded(

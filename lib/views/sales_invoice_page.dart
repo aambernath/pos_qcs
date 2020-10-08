@@ -44,7 +44,8 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
       vat: "0",
       grandtotal: "0",
       changeamount: "0",
-      outstandingamount: "0");
+      outstandingamount: "0",
+      writeoff: "0");
 
   TextEditingController controller = new TextEditingController();
   String filter;
@@ -54,6 +55,8 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
 
   var _searchview = new TextEditingController();
   var _paidcontroller = new TextEditingController();
+  var _writecontroller = new TextEditingController();
+
   bool _firstSearch = true;
   String _query = "";
   List<Item> _filteritems = [];
@@ -65,6 +68,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
   void initState() {
     super.initState();
     _dbHelper = DatabaseHelper.instance;
+    salesinvoiceid = null;
 
     _refreshItemList();
     scrollController = ScrollController()
@@ -169,20 +173,29 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
           width: PosTextSize.size2,
         ),
         linesAfter: 1);
-
-    ticket.text('Industrial Area 2', styles: PosStyles(align: PosAlign.center));
     ticket.text('Al Quoz, Dubai', styles: PosStyles(align: PosAlign.center));
     ticket.text('Tel: +97143387804', styles: PosStyles(align: PosAlign.center));
+    ticket.text('TAX INVOICE', styles: PosStyles(align: PosAlign.center));
     ticket.text('TRN: 100393295900003',
         styles: PosStyles(align: PosAlign.center), linesAfter: 1);
     ticket.row([
+      PosColumn(text: 'Cashier:', width: 4),
+      PosColumn(text: "${_posconfigs[0].warehouse}", width: 8),
+    ]);
+    ticket.row([
       PosColumn(text: 'Invoice No :', width: 4),
-      PosColumn(text: "${_posconfigs[0].warehouse}", width: 4),
-      PosColumn(text: ' - ', width: 2),
+      PosColumn(text: "${_salesInvoice.postingdate.substring(0, 5)}", width: 2),
+      PosColumn(
+          text: "/" + "${_salesInvoice.postingdate.substring(11, 13)}" + "-",
+          width: 2),
       PosColumn(
           text: salesinvoiceid.toString(),
-          width: 2,
+          width: 4,
           styles: PosStyles(align: PosAlign.left))
+    ]);
+    ticket.row([
+      PosColumn(text: 'Customer :', width: 4),
+      PosColumn(text: "${_salesInvoice.customer}", width: 8),
     ]);
 
     ticket.hr();
@@ -368,6 +381,12 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
         _calculatetotals();
       }
     });
+
+    _writecontroller.addListener(() {
+      if (_writecontroller.text.isNotEmpty) {
+        _calculatetotals();
+      }
+    });
   }
 
   //Floating Button tools
@@ -395,14 +414,15 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
       visible: dialVisible,
       curve: Curves.bounceIn,
       children: [
-        SpeedDialChild(
-          child: Icon(Icons.save, color: Colors.white),
-          backgroundColor: Colors.green,
-          onTap: () => _onSave(),
-          label: 'Save',
-          labelStyle: TextStyle(fontWeight: FontWeight.w500),
-          labelBackgroundColor: Colors.green,
-        ),
+        if (salesinvoiceid == null)
+          SpeedDialChild(
+            child: Icon(Icons.save, color: Colors.white),
+            backgroundColor: Colors.green,
+            onTap: () => _onSave(),
+            label: 'Save',
+            labelStyle: TextStyle(fontWeight: FontWeight.w500),
+            labelBackgroundColor: Colors.green,
+          ),
         if (salesinvoiceid != null)
           SpeedDialChild(
             child: Icon(Icons.print, color: Colors.white),
@@ -419,7 +439,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
   @override
   Widget build(BuildContext context) {
     DateTime now = DateTime.now();
-    String formattedDate = DateFormat('kk:mm:ss \n EEE d MMM').format(now);
+    String formattedDate = DateFormat('dd/MM/yyyy H:m').format(now);
     return Scaffold(
       appBar: AppBar(
         title: Text("Sales Invoice"),
@@ -478,14 +498,19 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
     _calculatetotals();
     _salesInvoice.customer = _customer.name;
     _salesInvoice.postingdate =
-        DateFormat('kk:mm:ss \n EEE d MMM').format(DateTime.now());
+        DateFormat('dd/MM/yyyy H/m').format(DateTime.now());
     _salesInvoice.paidamount = _paidcontroller.text.toString();
-
-    salesinvoiceid = await _dbHelper.insertSalesInvoice(_salesInvoice);
+    _salesInvoice.writeoff = _writecontroller.text.toString();
+    print("invoiceid:");
     print(salesinvoiceid);
-    for (int i = 0; i < _salesitems.length; i++) {
-      _salesitems[i].salesinvoiceid = salesinvoiceid;
-      await _dbHelper.insertsalesitem(_salesitems[i]);
+
+    if (salesinvoiceid == null) {
+      salesinvoiceid = await _dbHelper.insertSalesInvoice(_salesInvoice);
+
+      for (int i = 0; i < _salesitems.length; i++) {
+        _salesitems[i].salesinvoiceid = salesinvoiceid;
+        await _dbHelper.insertsalesitem(_salesitems[i]);
+      }
     }
   }
 
@@ -502,6 +527,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
               double.parse(_salesitems[i].rate));
     }
     setState(() {
+      _salesInvoice.writeoff = _writecontroller.text.toString();
       _salesInvoice.net = total.toStringAsFixed(2);
       _salesInvoice.vat = (total * 0.05).toStringAsFixed(2);
       _salesInvoice.changeamount = "0";
@@ -509,6 +535,13 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
       _salesInvoice.grandtotal =
           (double.parse(_salesInvoice.net) + double.parse(_salesInvoice.vat))
               .toStringAsFixed(2);
+
+      if (_writecontroller.text.isNotEmpty) {
+        _salesInvoice.grandtotal = (double.parse(_salesInvoice.grandtotal) -
+                double.parse(_salesInvoice.writeoff))
+            .toStringAsFixed(2);
+      }
+
       _salesInvoice.paidamount = _paidcontroller.text.toString();
       if (_paidcontroller.text.isNotEmpty) {
         if (double.parse(_paidcontroller.text) <=
@@ -610,6 +643,15 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
                   keyboardType: TextInputType.number,
                 ),
               ),
+              Expanded(
+                child: TextField(
+                  controller: _writecontroller,
+                  decoration: InputDecoration(
+                    labelText: 'Write off',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
               Expanded(child: Text("Change :" + _salesInvoice.changeamount)),
               Expanded(
                   child:
@@ -656,6 +698,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
                   child: new TextField(
                 autofocus: true,
                 controller: _ctrlqty,
+                keyboardType: TextInputType.number,
                 decoration: new InputDecoration(labelText: 'QTY'),
                 onChanged: (value) {
                   _salesitems[index].qty = value;
@@ -665,6 +708,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
                   child: new TextField(
                 autofocus: true,
                 controller: _ctrlrate,
+                keyboardType: TextInputType.number,
                 decoration: new InputDecoration(labelText: 'Rate'),
                 onChanged: (value) {
                   _salesitems[index].rate = value;

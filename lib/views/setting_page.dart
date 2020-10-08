@@ -211,6 +211,10 @@ class _settingspageState extends State<settingspage> {
               children: <Widget>[
                 Container(
                   margin: EdgeInsets.all(10.0),
+                  child: Text("Status:"),
+                ),
+                Container(
+                  margin: EdgeInsets.all(10.0),
                   child: Text(data.toString()),
                 )
               ],
@@ -232,27 +236,38 @@ class _settingspageState extends State<settingspage> {
   }
 
   _alert_price_sync() async {
-    var code = await syncitemprices();
-    print(code);
-    if (code == 200)
-      setState(() => data = "Item Price Sync Success");
-    else
-      print("Item Price Sync Error");
+    if (isInternetOn) {
+      setState(() => data = "Internet available..Syncing");
+      var code = await syncitemprices();
+      print(code);
+      if (code == 200)
+        setState(() => data = "Item Price Sync Success");
+      else
+        setState(() => data = "Item Price Error");
+    } else {
+      setState(() => data = "No Internet");
+    }
   }
 
   _alert_item_sync() async {
-    var code = await syncitems();
-    print(code);
-    if (code == 200)
-      setState(() => data = "Item Sync Success");
-    else
-      print("Item Sync Error");
+    if (isInternetOn) {
+      setState(() => data = "Internet available..Syncing");
+      var code = await syncitems();
+      print(code);
+      if (code == 200)
+        setState(() => data = "Item Sync Success");
+      else
+        setState(() => data = "Item Sync Error");
+    } else {
+      setState(() => data = "No Internet");
+    }
   }
 
   _alert_invoice_sync() async {
     if (isInternetOn) {
       setState(() => data = "Internet available..Syncing");
       var code = await syncinvoice();
+      setState(() => data = "Syncing in Process...please wait!");
       print(code);
       if (code == 200)
         setState(() => data = "Invoice Sync Success");

@@ -80,7 +80,8 @@ class DatabaseHelper {
         ${SalesInvoice.colgrandtotal} TEXT,
         ${SalesInvoice.colpaidamount} TEXT,
         ${SalesInvoice.colchangeamount} TEXT,
-        ${SalesInvoice.coloutstandingamount} TEXT
+        ${SalesInvoice.coloutstandingamount} TEXT,
+        ${SalesInvoice.colwriteoff} TEXT
 
 
       )""");
@@ -92,7 +93,8 @@ class DatabaseHelper {
         ${PosConfig.colemail} TEXT,
         ${PosConfig.colpassword} TEXT,
         ${PosConfig.colwarehouse} TEXT,
-        ${PosConfig.colcash} TEXT
+        ${PosConfig.colcash} TEXT,
+        ${PosConfig.colcurrentno} INTEGER
       )""");
   }
 

@@ -156,13 +156,17 @@ syncinvoice() async {
   await pushlocalcust();
 
   for (int i = 0; i < _salesinvoices.length; i++) {
+    te = [];
     for (int j = 0; j < _salesitems.length; j++) {
+      print(_salesitems[j].salesinvoiceid);
+      print(_salesinvoices[i].id);
       if (_salesinvoices[i].id == _salesitems[j].salesinvoiceid) {
         tdata = {
           "item_code": "${_salesitems[j].itemname}",
           "qty": "${_salesitems[j].qty}",
           "rate": "${_salesitems[j].rate}"
         };
+        print(tdata);
         te.add(tdata);
       }
     }
@@ -170,7 +174,15 @@ syncinvoice() async {
       "naming_series": "ACC-SINV-.YYYY.-",
       "customer": "${_salesinvoices[i].customer}",
       "is_pos": "1",
-      "pos_id": "${_salesinvoices[i].id}",
+      "write_off_amount": "${_salesinvoices[i].writeoff}",
+      "write_off_account": "Write Off - BB",
+      "pos_id": "${_posconfigs[0].warehouse}" +
+          "-" +
+          "${_salesinvoices[i].postingdate.substring(0, 5)}" +
+          "/" +
+          "${_salesinvoices[i].postingdate.substring(11, 13)}" +
+          "-" +
+          "${_salesinvoices[i].id}",
       "company": "Beirut Automatic Bakery (L.L.C)",
       "update_stock": "1",
       "set_warehouse": "${_posconfigs[0].warehouse}",
@@ -214,6 +226,7 @@ syncinvoice() async {
       return statuscode;
     }
   }
+  //await DatabaseHelper.instance.deleteallsalesInvoice();
 }
 
 pushlocalcust() async {
@@ -223,10 +236,7 @@ pushlocalcust() async {
       "&pwd=" +
       _posconfigs[0].password.toString();
 
-  print(loginurl);
-
   String itemurl = _posconfigs[0].url.toString() + '/api/resource/Customer';
-  print(itemurl);
 
   _customers = await DatabaseHelper.instance.fetchCustomers();
 
@@ -250,12 +260,9 @@ pushlocalcust() async {
 
       fdata = {'"data"': hdata};
       String jsondata = fdata.toString();
-      print(jsondata);
 
       response2 = await Requests.post(itemurl,
           json: {"data": hdata}, bodyEncoding: RequestBodyEncoding.JSON);
-
-      debugPrint(response2.content());
 
       _customers[i].localcust = 0;
       await DatabaseHelper.instance.updateCustomer(_customers[i]);

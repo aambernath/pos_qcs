@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:pos_qcs/models/sales_invoice.dart';
+import 'package:pos_qcs/models/sales_item.dart';
 import 'package:pos_qcs/utils/database_helper.dart';
 import 'package:pos_qcs/views/sales_invoice_page.dart';
 
@@ -29,6 +30,7 @@ class _saleslistState extends State<saleslist> {
   SalesInvoice salesInvoice = SalesInvoice();
   DatabaseHelper _dbHelper;
   List<SalesInvoice> _salesInvoices = [];
+  List<SalesItem> _salesitems = [];
 
   final _ctrlcustomer = TextEditingController();
   final _ctrlpostingdate = TextEditingController();
@@ -49,12 +51,33 @@ class _saleslistState extends State<saleslist> {
       appBar: AppBar(
         title: Text("Sales Invoice List"),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      body: Container(
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[_form(), _list()],
+          children: <Widget>[
+            Container(
+              child: new Row(
+                children: <Widget>[
+                  Container(
+                    child: new Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        new Text(
+                          "Stored Invoice",
+                          style: new TextStyle(
+                              color: Colors.lightGreen, fontSize: 12.0),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _invoicehead(),
+            _itemlist(),
+            _totalfooter(),
+            _list()
+          ],
         ),
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
@@ -67,6 +90,64 @@ class _saleslistState extends State<saleslist> {
       _salesInvoices = x;
     });
   }
+
+  _invoicehead() => Card(
+      child: Container(
+          color: Colors.lightBlue[100],
+          padding: EdgeInsets.symmetric(vertical: 2.0),
+          child: Row(
+            children: <Widget>[
+              Expanded(child: Text(_ctrlcustomer.text)),
+              Expanded(child: Text("Mobile :")),
+              Expanded(child: Text("TRN:")),
+            ],
+          )));
+
+  _itemlist() => Expanded(
+        child: Container(
+          margin: EdgeInsets.fromLTRB(5, 10, 10, 0),
+          child: Scrollbar(
+              child: ListView.builder(
+            itemBuilder: (context, index) {
+              return Column(
+                children: <Widget>[
+                  ListTile(
+                    title: new Text(
+                      _salesitems[index].itemname,
+                      style: new TextStyle(fontSize: 14.0),
+                    ),
+                    subtitle: new Text("Qty: " +
+                        _salesitems[index].qty.toString() +
+                        " x " +
+                        _salesitems[index].rate.toString() +
+                        " AED"),
+                    trailing: new Text(
+                        "AED " +
+                            (double.parse(_salesitems[index].rate) *
+                                    double.parse(_salesitems[index].qty))
+                                .toString(),
+                        style: new TextStyle(fontSize: 14.0)),
+                  ),
+                ],
+              );
+            },
+            itemCount: _salesitems.length,
+          )),
+        ),
+      );
+
+  _totalfooter() => Card(
+      child: Container(
+          color: Colors.lightBlue[100],
+          padding: EdgeInsets.symmetric(vertical: 2.0),
+          child: Row(
+            children: <Widget>[
+              Expanded(child: Text("Paid: " + _ctrlpaidamount.text)),
+              Expanded(child: Text("Outstanding : " + _ctrlvat.text)),
+              Expanded(
+                  child: Text("Grand Total: " + "AED " + _ctrlgrandtotal.text)),
+            ],
+          )));
 
   _form() => Container(
       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
@@ -148,6 +229,13 @@ class _saleslistState extends State<saleslist> {
         ),
       ));
 
+  _getitems(invoiceid) async {
+    List<SalesItem> x = await _dbHelper.fetchSalesItemlist(invoiceid);
+    setState(() {
+      _salesitems = x;
+    });
+  }
+
   _list() => Expanded(
         child: Card(
           margin: EdgeInsets.fromLTRB(20, 30, 20, 0),
@@ -163,18 +251,20 @@ class _saleslistState extends State<saleslist> {
                       style: TextStyle(
                           color: Colors.lime, fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(_salesInvoices[index].postingdate),
+                    subtitle: Text(_salesInvoices[index].grandtotal),
                     onTap: () {
                       setState(() {
                         salesInvoice = _salesInvoices[index];
+
                         _ctrlcustomer.text = _salesInvoices[index].customer;
                         _ctrlpostingdate.text =
                             _salesInvoices[index].postingdate;
                         _ctrlpaidamount.text = _salesInvoices[index].paidamount;
                         _ctrlgrandtotal.text = _salesInvoices[index].grandtotal;
 
-                        _ctrlvat.text = _salesInvoices[index].vat;
+                        _ctrlvat.text = _salesInvoices[index].outstandingamount;
                       });
+                      _getitems(salesInvoice.id);
                     },
                   ),
                   Divider(
