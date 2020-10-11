@@ -104,15 +104,16 @@ class _customerlistState extends State<customerlist> {
                     textColor: Colors.white,
                   ),
                 ),
-                Container(
-                  margin: EdgeInsets.all(10.0),
-                  child: RaisedButton(
-                    onPressed: () => _onaddinvoice(),
-                    child: Text('Add Invoice'),
-                    color: Colors.blue,
-                    textColor: Colors.white,
-                  ),
-                )
+                if (_customer.id != null)
+                  Container(
+                    margin: EdgeInsets.all(10.0),
+                    child: RaisedButton(
+                      onPressed: () => _onaddinvoice(),
+                      child: Text('Add Invoice'),
+                      color: Colors.blue,
+                      textColor: Colors.white,
+                    ),
+                  )
               ],
             )
           ],
@@ -139,7 +140,11 @@ class _customerlistState extends State<customerlist> {
 
     if (_customer.id == null) {
       _customer.localcust = 1;
-      await _dbHelper.insertCustomer(_customer);
+      var test = await _dbHelper.insertCustomer(_customer);
+      print(test);
+      setState(() {
+        _customer.id = test;
+      });
     } else {
       await _dbHelper.updateCustomer(_customer);
       _refreshCustomerList();
