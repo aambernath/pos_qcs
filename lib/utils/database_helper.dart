@@ -236,6 +236,12 @@ class DatabaseHelper {
 
   // Sales Invoice Items
 
+  Future<int> deletesalesInvoice(int invid) async {
+    Database db = await database;
+    return await db
+        .delete("salesinvoices", where: 'id = ?', whereArgs: [invid]);
+  }
+
   Future<int> deleteallsalesInvoice() async {
     Database db = await database;
     return await db.delete(SalesInvoice.tblSalesInvoice);

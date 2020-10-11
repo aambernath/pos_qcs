@@ -218,11 +218,16 @@ syncinvoice() async {
     statuscode = response2.statusCode;
     debugPrint(response2.content());
     print(statuscode);
+    if (statuscode != null) {
+      if (statuscode == 200) {
+        await DatabaseHelper.instance.deletesalesInvoice(_salesinvoices[i].id);
+      }
+    }
   }
-  print(statuscode);
+
   if (statuscode != null) {
     if (statuscode == 200) {
-      await DatabaseHelper.instance.deleteallsalesInvoice();
+      // await DatabaseHelper.instance.deleteallsalesInvoice();
       return statuscode;
     }
   }

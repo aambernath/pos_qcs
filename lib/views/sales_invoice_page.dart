@@ -197,6 +197,10 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
       PosColumn(text: 'Customer :', width: 4),
       PosColumn(text: "${_salesInvoice.customer}", width: 8),
     ]);
+    ticket.row([
+      PosColumn(text: 'Cust TRN :', width: 4),
+      PosColumn(text: "${_customer.trn}", width: 8),
+    ]);
 
     ticket.hr();
 
