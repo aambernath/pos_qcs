@@ -255,7 +255,8 @@ pushlocalcust() async {
         "customer_group": "Commercial",
         "territory": "United Arab Emirates",
         "tax_id": "${_customers[i].trn}",
-        "mobile": "${_customers[i].mobile}"
+        "mobile": "${_customers[i].mobile}",
+        "account_manager": "${_posconfigs[0].email.toString()}"
       };
 
       fdata = {'"data"': hdata};
