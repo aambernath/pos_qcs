@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pos_qcs/views/item_page.dart';
 import 'package:pos_qcs/views/customer_page.dart';
+import 'package:pos_qcs/views/print_test.dart';
 import 'package:pos_qcs/views/sales_page.dart';
-import 'package:pos_qcs/utils/sync_helper.dart';
 import 'package:pos_qcs/views/setting_page.dart';
-import 'package:pos_qcs/utils/database_helper.dart';
-import 'package:pos_qcs/models/posconfig.dart';
 
 class DrawerNavigation extends StatelessWidget {
   final String title;
@@ -60,6 +58,14 @@ class DrawerNavigation extends StatelessWidget {
               trailing: Icon(Icons.view_list),
               onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => settingspage())),
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('Printer Test'),
+              subtitle: Text('set user details & sync'),
+              trailing: Icon(Icons.view_list),
+              onTap: () => Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (context) => printtest())),
             ),
           ],
         ),

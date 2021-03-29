@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:pos_qcs/models/customer.dart';
@@ -34,6 +33,7 @@ class _customerlistState extends State<customerlist> {
   Customer _customer = Customer();
   DatabaseHelper _dbHelper;
   List<Customer> _customers = [];
+  List<Customer> _searchcustomers = [];
 
   var _searchview = new TextEditingController();
   bool _firstSearch = true;
@@ -138,13 +138,18 @@ class _customerlistState extends State<customerlist> {
     var form = _formKey.currentState;
     form.save();
 
-    if (_customer.id == null) {
+    _searchcustomers = await _dbHelper.fetchCustomer(_customer.name);
+    //print(_searchcustomers[0].name);
+    if (_searchcustomers.isEmpty) {
+      _customer.id = null;
+      print("empty list");
       _customer.localcust = 1;
       var test = await _dbHelper.insertCustomer(_customer);
       print(test);
       setState(() {
         _customer.id = test;
       });
+      form.reset();
     } else {
       await _dbHelper.updateCustomer(_customer);
       _refreshCustomerList();

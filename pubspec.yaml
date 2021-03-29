@@ -40,6 +40,11 @@ dependencies:
   shared_preferences: ^0.5.8
   rflutter_alert: ^1.1.0
   connectivity: ^0.4.9+3
+  progress_dialog: ^1.2.4
+  flutter_html_to_pdf: ^0.5.2
+  flutter_full_pdf_viewer: ^1.0.6
+  share: ^0.6.5 
+  esys_flutter_share: ^1.0.2
   
 
 dev_dependencies:

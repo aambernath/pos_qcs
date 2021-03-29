@@ -9,6 +9,7 @@ import 'package:pos_qcs/models/posconfig.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pos_qcs/utils/sync_helper.dart';
 import 'package:esc_pos_bluetooth/esc_pos_bluetooth.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 
 class settingspage extends StatefulWidget {
   settingspage({Key key, this.title}) : super(key: key);
@@ -35,6 +36,7 @@ class _settingspageState extends State<settingspage> {
   final _ctrlpassword = TextEditingController();
   final _ctrlwarehouse = TextEditingController();
   final _ctrlcash = TextEditingController();
+  ProgressDialog pr;
 
   PrinterBluetoothManager printerManager = PrinterBluetoothManager();
   List<PrinterBluetooth> _devices = [];
@@ -83,6 +85,9 @@ class _settingspageState extends State<settingspage> {
 
   @override
   Widget build(BuildContext context) {
+    //For normal dialog
+    pr = ProgressDialog(context,
+        type: ProgressDialogType.Normal, isDismissible: false, showLogs: false);
     return Scaffold(
       appBar: AppBar(
         title: Text("Settings"),
@@ -93,7 +98,7 @@ class _settingspageState extends State<settingspage> {
         // in the middle of the parent.
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[_form()],
+          children: <Widget>[_form(context)],
         ),
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
@@ -115,7 +120,7 @@ class _settingspageState extends State<settingspage> {
     }
   }
 
-  _form() => Container(
+  _form(context) => Container(
       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
       child: Form(
         key: _formKey,
@@ -199,7 +204,7 @@ class _settingspageState extends State<settingspage> {
                 Container(
                   margin: EdgeInsets.all(10.0),
                   child: RaisedButton(
-                    onPressed: () => _alert_invoice_sync(),
+                    onPressed: () => _alert_invoice_sync(context),
                     child: Text('Sync Current Invoices'),
                     color: Colors.deepPurpleAccent,
                     textColor: Colors.white,
@@ -237,13 +242,18 @@ class _settingspageState extends State<settingspage> {
 
   _alert_price_sync() async {
     if (isInternetOn) {
+      await pr.show();
       setState(() => data = "Internet available..Syncing");
+
       var code = await syncitemprices();
       print(code);
-      if (code == 200)
+      if (code == 200) {
         setState(() => data = "Item Price Sync Success");
-      else
+        await pr.hide();
+      } else {
         setState(() => data = "Item Price Error");
+        await pr.hide();
+      }
     } else {
       setState(() => data = "No Internet");
     }
@@ -263,16 +273,19 @@ class _settingspageState extends State<settingspage> {
     }
   }
 
-  _alert_invoice_sync() async {
+  _alert_invoice_sync(context) async {
     if (isInternetOn) {
       setState(() => data = "Internet available..Syncing");
+      await pr.show();
       var code = await syncinvoice();
       setState(() => data = "Syncing in Process...please wait!");
       print(code);
-      if (code == 200)
+      if (code == 200) {
         setState(() => data = "Invoice Sync Success");
-      else
+        await pr.hide();
+      } else
         print("Invoice Sync Error");
+      await pr.hide();
     } else {
       setState(() => data = "No Internet");
     }

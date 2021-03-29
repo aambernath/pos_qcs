@@ -170,19 +170,16 @@ syncinvoice() async {
         te.add(tdata);
       }
     }
+    //print(_salesinvoices[i].postingdate.substring(0, 4));
     hdata = {
       "naming_series": "ACC-SINV-.YYYY.-",
-      "customer": "${_salesinvoices[i].customer}",
+      "posting_date": "${_salesinvoices[i].postingdate}",
+      //"due_date": "${_salesinvoices[i].postingdate}",
+      "customer": "${_salesinvoices[i].customer.trimRight()}",
       "is_pos": "1",
       "write_off_amount": "${_salesinvoices[i].writeoff}",
       "write_off_account": "Write Off - BB",
-      "pos_id": "${_posconfigs[0].warehouse}" +
-          "-" +
-          "${_salesinvoices[i].postingdate.substring(0, 5)}" +
-          "/" +
-          "${_salesinvoices[i].postingdate.substring(11, 13)}" +
-          "-" +
-          "${_salesinvoices[i].id}",
+      "pos_id": "${_salesinvoices[i].invid.toString()}",
       "company": "Beirut Automatic Bakery (L.L.C)",
       "update_stock": "1",
       "set_warehouse": "${_posconfigs[0].warehouse}",
@@ -210,10 +207,11 @@ syncinvoice() async {
 
     await Requests.get(loginurl);
 
-    var response2 = await Requests.post(
-        'http://157.230.32.98/api/resource/Sales%20Invoice',
-        json: {"data": hdata},
-        bodyEncoding: RequestBodyEncoding.JSON);
+    String syncloginurl =
+        _posconfigs[0].url.toString() + '/api/resource/Sales%20Invoice';
+
+    var response2 = await Requests.post(syncloginurl,
+        json: {"data": hdata}, bodyEncoding: RequestBodyEncoding.JSON);
 
     statuscode = response2.statusCode;
     debugPrint(response2.content());
@@ -221,6 +219,7 @@ syncinvoice() async {
     if (statuscode != null) {
       if (statuscode == 200) {
         await DatabaseHelper.instance.deletesalesInvoice(_salesinvoices[i].id);
+        await DatabaseHelper.instance.deletesalesItems(_salesinvoices[i].id);
       }
     }
   }
@@ -228,6 +227,7 @@ syncinvoice() async {
   if (statuscode != null) {
     if (statuscode == 200) {
       // await DatabaseHelper.instance.deleteallsalesInvoice();
+      //await DatabaseHelper.instance.deleteallsalesItems();
       return statuscode;
     }
   }
@@ -248,7 +248,7 @@ pushlocalcust() async {
   Map<String, dynamic> hdata;
   Map<String, dynamic> fdata;
 
-  List<Map<String, dynamic>> te = [];
+  //List<Map<String, dynamic>> te = [];
 
   var response2;
 
@@ -256,7 +256,7 @@ pushlocalcust() async {
     if (_customers[i].localcust == 1) {
       hdata = {
         "customer_type": "Company",
-        "customer_name": "${_customers[i].name}",
+        "customer_name": "${_customers[i].name.trimRight()}",
         "customer_group": "Commercial",
         "territory": "United Arab Emirates",
         "tax_id": "${_customers[i].trn}",

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +15,14 @@ import 'package:esc_pos_bluetooth/esc_pos_bluetooth.dart';
 import 'package:esc_pos_utils/esc_pos_utils.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:pos_qcs/models/posconfig.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_full_pdf_viewer/flutter_full_pdf_viewer.dart';
+import 'package:flutter_html_to_pdf/flutter_html_to_pdf.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:esys_flutter_share/esys_flutter_share.dart';
+import 'dart:typed_data';
 
 class salesinvoicelist extends StatefulWidget {
   final String title;
@@ -38,6 +48,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
   Customer _customer = Customer();
   List<PosConfig> _posconfigs = [];
   var salesinvoiceid;
+  String generatedPdfFilePath;
 
   SalesInvoice _salesInvoice = SalesInvoice(
       net: "0",
@@ -184,13 +195,10 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
     ]);
     ticket.row([
       PosColumn(text: 'Invoice No :', width: 4),
-      PosColumn(text: "${_salesInvoice.postingdate.substring(0, 5)}", width: 2),
+      PosColumn(text: "${_salesInvoice.invid}", width: 2),
       PosColumn(
-          text: "/" + "${_salesInvoice.postingdate.substring(11, 13)}" + "-",
-          width: 2),
-      PosColumn(
-          text: salesinvoiceid.toString(),
-          width: 4,
+          text: " - " + salesinvoiceid.toString(),
+          width: 6,
           styles: PosStyles(align: PosAlign.left))
     ]);
     ticket.row([
@@ -436,6 +444,15 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
             labelStyle: TextStyle(fontWeight: FontWeight.w500),
             labelBackgroundColor: Colors.deepOrangeAccent,
           ),
+        if (salesinvoiceid != null)
+          SpeedDialChild(
+            child: Icon(Icons.print, color: Colors.white),
+            backgroundColor: Colors.deepOrange,
+            onTap: () => _showMyDialog(),
+            label: 'PDF',
+            labelStyle: TextStyle(fontWeight: FontWeight.w500),
+            labelBackgroundColor: Colors.deepOrangeAccent,
+          )
       ],
     );
   }
@@ -501,10 +518,10 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
   _onSave() async {
     _calculatetotals();
     _salesInvoice.customer = _customer.name;
-    _salesInvoice.postingdate =
-        DateFormat('dd/MM/yyyy H/m').format(DateTime.now());
+    _salesInvoice.postingdate = DateFormat('yyyy-MM-dd').format(DateTime.now());
     _salesInvoice.paidamount = _paidcontroller.text.toString();
     _salesInvoice.writeoff = _writecontroller.text.toString();
+    _salesInvoice.invid = DateFormat('dd-MM-yyyy mm').format(DateTime.now());
     print("invoiceid:");
     print(salesinvoiceid);
 
@@ -515,6 +532,260 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
         _salesitems[i].salesinvoiceid = salesinvoiceid;
         await _dbHelper.insertsalesitem(_salesitems[i]);
       }
+    }
+    _create_invoice_pdf(_salesInvoice.customer);
+  }
+
+  Future<void> _create_invoice_pdf(cust_name) async {
+    _posconfigs = await DatabaseHelper.instance.fetchPosConfigs();
+    var html1 = """<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>A simple, clean, and responsive HTML invoice template</title>
+    
+    <style>
+    .invoice-box {
+        max-width: 800px;
+        margin: auto;
+        padding: 30px;
+        border: 1px solid #eee;
+        box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+        font-size: 29px;
+        line-height: 24px;
+        font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+        color: #555;
+    }
+    
+    .invoice-box table {
+        width: 100%;
+        line-height: inherit;
+        text-align: left;
+    }
+    
+    .invoice-box table td {
+        padding: 5px;
+        vertical-align: top;
+    }
+    
+    .invoice-box table tr td:nth-child(2) {
+        text-align: right;
+    }
+
+    .invoice-box table tr td:nth-child(4) {
+        text-align: right;
+    }
+    .invoice-box table tr td:nth-child(3) {
+        text-align: left;
+    }
+    
+    .invoice-box table tr.top table td {
+        padding-bottom: 20px;
+    }
+    
+    .invoice-box table tr.top table td.title {
+        font-size: 45px;
+        line-height: 45px;
+        color: #333;
+    }
+    
+    .invoice-box table tr.information table td {
+        padding-bottom: 40px;
+    }
+    
+    .invoice-box table tr.heading td {
+        background: #eee;
+        border-bottom: 1px solid #ddd;
+        font-weight: bold;
+    }
+    
+    .invoice-box table tr.details td {
+        padding-bottom: 20px;
+    }
+    
+    .invoice-box table tr.item td{
+        border-bottom: 1px solid #eee;
+    }
+    
+    .invoice-box table tr.item.last td {
+        border-bottom: none;
+    }
+    
+    .invoice-box table tr.total td:nth-child(2) {
+        border-top: 2px solid #eee;
+        font-weight: bold;
+    }
+    
+    @media only screen and (max-width: 600px) {
+        .invoice-box table tr.top table td {
+            width: 100%;
+            display: block;
+            text-align: center;
+        }
+        
+        .invoice-box table tr.information table td {
+            width: 100%;
+            display: block;
+            text-align: center;
+        }
+    }
+    
+    /** RTL **/
+    .rtl {
+        direction: rtl;
+        font-family: Tahoma, 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+    }
+    
+    .rtl table {
+        text-align: right;
+    }
+    
+    .rtl table tr td:nth-child(2) {
+        text-align: left;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="invoice-box">
+        <table cellpadding="0" cellspacing="0">
+            <tr class="top">
+                <td colspan="4">
+                    <table>
+                        <tr>
+                            <td class="title" colspan=2>
+                                Beirut Automatic Bakery L.L.C
+                            </td>
+                            
+                            <td>
+                               Al Quoz, Dubai<br>
+                                Tel: +97143387804<br>
+                                TRN: 100393295900003 
+                                
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            
+            <tr class="information">
+                <td colspan="4">
+                    <table>
+                        <tr>
+                            <td>
+                                <b>Tax Invoice:</b> ${_salesInvoice.invid}<br>
+                                <b>Date:</b> ${_salesInvoice.postingdate}<br>
+                                <b>Cashier:</b> ${_posconfigs[0].warehouse}<br>
+                                <b>Customer:</b>${_salesInvoice.customer}<br>
+                                <b>Cust TRN:</b>${_customer.trn},
+                                
+                            </td>
+                            
+                            <td>
+                                
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            
+            <tr class="heading">
+                <td>
+                    Item
+                </td>
+                <td>
+                    Qty
+                </td>
+
+                <td>
+                    Rate
+                </td>
+                
+                <td>
+                    Total
+                </td>
+            </tr>
+            """;
+
+    var html2 = "";
+
+    for (int i = 0; i < _salesitems.length; i++) {
+      String total =
+          (double.parse(_salesitems[i].qty) * double.parse(_salesitems[i].rate))
+              .toString();
+
+      html2 += """
+              <tr class="item">
+                <td>
+                    ${_salesitems[i].itemname}
+                </td>
+                <td>
+                    ${_salesitems[i].qty}
+                </td>
+                <td>
+                    ${_salesitems[i].rate} 
+                </td>
+                <td>
+                    $total
+                </td>
+              </tr>
+            """;
+
+      var html3 = """ 
+      
+            <tr class="total">
+                <td colspan="3">
+                                <b>Paid:</b> ${_salesInvoice.paidamount}
+                                
+                                
+                                
+                </td>
+                
+                
+                
+                <td>
+                   Net: AED ${_salesInvoice.net}
+                </td>
+            </tr>
+
+            <tr class="total">
+                <td colspan="3">
+                      <b>Change:</b> ${_salesInvoice.changeamount}
+                </td>
+                
+                
+                <td>
+                   VAT: AED ${_salesInvoice.vat}
+                </td>
+            </tr>
+
+            <tr class="total">
+                <td colspan="3"></td>
+                
+                
+                <td>
+                   Total: AED ${_salesInvoice.grandtotal}
+                </td>
+            </tr>
+
+        </table>
+
+        
+
+    </div>
+</body>
+</html> """;
+      var htmlContent = html1 + html2 + html3;
+
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      var targetPath = '/storage/emulated/0/posinvoice/';
+      var targetFileName = cust_name;
+      print(targetPath);
+
+      var generatedPdfFile = await FlutterHtmlToPdf.convertFromHtmlContent(
+          htmlContent, targetPath, targetFileName);
+      generatedPdfFilePath = generatedPdfFile.path;
+      print(generatedPdfFilePath);
     }
   }
 

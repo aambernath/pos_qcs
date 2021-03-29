@@ -81,7 +81,8 @@ class DatabaseHelper {
         ${SalesInvoice.colpaidamount} TEXT,
         ${SalesInvoice.colchangeamount} TEXT,
         ${SalesInvoice.coloutstandingamount} TEXT,
-        ${SalesInvoice.colwriteoff} TEXT
+        ${SalesInvoice.colwriteoff} TEXT,
+        ${SalesInvoice.colinvid} TEXT
 
 
       )""");
@@ -127,6 +128,15 @@ class DatabaseHelper {
   Future<int> deleteallCustomer() async {
     Database db = await database;
     return await db.delete(Customer.tblCustomer);
+  }
+
+  Future<List<Customer>> fetchCustomer(String cust) async {
+    Database db = await database;
+    List<Map> customer = await db.query(Customer.tblCustomer,
+        where: '${Customer.colname}=?', whereArgs: [cust]);
+    return customer.length == 0
+        ? []
+        : customer.map((x) => Customer.fromMap(x)).toList();
   }
 
   //Sales Head
@@ -240,6 +250,12 @@ class DatabaseHelper {
     Database db = await database;
     return await db
         .delete("salesinvoices", where: 'id = ?', whereArgs: [invid]);
+  }
+
+  Future<int> deletesalesItems(int invid) async {
+    Database db = await database;
+    return await db
+        .delete("salesitems", where: 'salesinvoiceid = ?', whereArgs: [invid]);
   }
 
   Future<int> deleteallsalesInvoice() async {
