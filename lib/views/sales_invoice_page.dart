@@ -536,8 +536,15 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
     // _create_invoice_pdf(_salesInvoice.customer);
   }
 
+  _onPrint() async {
+    _salesInvoice.printyes = 1;
+
+    // _create_invoice_pdf(_salesInvoice.customer);
+  }
+
   _pdfprint() async {
     _create_invoice_pdf(_salesInvoice.id);
+    _onPrint();
   }
 
   Future<void> _create_invoice_pdf(cust_name) async {
@@ -848,16 +855,18 @@ body {
                                 .toString(),
                         style: new TextStyle(fontSize: 14.0)),
                     onTap: () async {
-                      setState(() {
-                        _ctrlqty.text = _salesitems[index].qty;
-                        _ctrlrate.text = _salesitems[index].rate;
-                      });
+                      if (_salesInvoice.printyes != 1) {
+                        setState(() {
+                          _ctrlqty.text = _salesitems[index].qty;
+                          _ctrlrate.text = _salesitems[index].rate;
+                        });
 
-                      final String newText =
-                          await _asyncInputDialog(context, index);
+                        final String newText =
+                            await _asyncInputDialog(context, index);
 
-                      setState(() {});
-                      _calculatetotals();
+                        setState(() {});
+                        _calculatetotals();
+                      }
                     },
                     onLongPress: () => _deletelineitem(index),
                   ),

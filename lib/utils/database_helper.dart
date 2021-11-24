@@ -81,6 +81,7 @@ class DatabaseHelper {
         ${SalesInvoice.colpaidamount} TEXT,
         ${SalesInvoice.colchangeamount} TEXT,
         ${SalesInvoice.coloutstandingamount} TEXT,
+        ${SalesInvoice.colprintyes} INTEGER,
         ${SalesInvoice.colwriteoff} TEXT,
         ${SalesInvoice.colinvid} TEXT
 

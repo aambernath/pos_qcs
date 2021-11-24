@@ -11,6 +11,7 @@ class SalesInvoice {
   static const coloutstandingamount = 'outstandingamount';
   static const colwriteoff = 'writeoff';
   static const colinvid = 'invid';
+  static const colprintyes = 'printyes';
 
   SalesInvoice(
       {this.id,
@@ -23,6 +24,7 @@ class SalesInvoice {
       this.changeamount,
       this.writeoff,
       this.outstandingamount,
+      this.printyes,
       this.invid});
 
   int id;
@@ -35,6 +37,7 @@ class SalesInvoice {
   String changeamount;
   String writeoff;
   String outstandingamount;
+  int printyes;
   String invid;
 
   SalesInvoice.fromMap(Map<String, dynamic> map) {
@@ -48,6 +51,7 @@ class SalesInvoice {
     writeoff = map[colwriteoff];
     outstandingamount = map[coloutstandingamount];
     net = map[colnet];
+    printyes = map[colprintyes];
     invid = map[colinvid];
   }
 
@@ -62,6 +66,7 @@ class SalesInvoice {
       colchangeamount: changeamount,
       coloutstandingamount: outstandingamount,
       colwriteoff: writeoff,
+      colprintyes: printyes,
       colinvid: invid
     };
     if (id != null) map[colid] = id;
