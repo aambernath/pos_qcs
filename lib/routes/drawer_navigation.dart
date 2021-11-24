@@ -59,14 +59,6 @@ class DrawerNavigation extends StatelessWidget {
               onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => settingspage())),
             ),
-            ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Printer Test'),
-              subtitle: Text('set user details & sync'),
-              trailing: Icon(Icons.view_list),
-              onTap: () => Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (context) => printtest())),
-            ),
           ],
         ),
       ),

@@ -435,20 +435,20 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
             labelStyle: TextStyle(fontWeight: FontWeight.w500),
             labelBackgroundColor: Colors.green,
           ),
+        //  if (salesinvoiceid != null)
+        //    SpeedDialChild(
+        //      child: Icon(Icons.print, color: Colors.white),
+        //      backgroundColor: Colors.deepOrange,
+        //      onTap: () => _showMyDialog(),
+        //      label: 'Print',
+        //      labelStyle: TextStyle(fontWeight: FontWeight.w500),
+        //      labelBackgroundColor: Colors.deepOrangeAccent,
+        //    ),
         if (salesinvoiceid != null)
           SpeedDialChild(
             child: Icon(Icons.print, color: Colors.white),
             backgroundColor: Colors.deepOrange,
-            onTap: () => _showMyDialog(),
-            label: 'Print',
-            labelStyle: TextStyle(fontWeight: FontWeight.w500),
-            labelBackgroundColor: Colors.deepOrangeAccent,
-          ),
-        if (salesinvoiceid != null)
-          SpeedDialChild(
-            child: Icon(Icons.print, color: Colors.white),
-            backgroundColor: Colors.deepOrange,
-            onTap: () => _showMyDialog(),
+            onTap: () => _pdfprint(),
             label: 'PDF',
             labelStyle: TextStyle(fontWeight: FontWeight.w500),
             labelBackgroundColor: Colors.deepOrangeAccent,
@@ -521,7 +521,7 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
     _salesInvoice.postingdate = DateFormat('yyyy-MM-dd').format(DateTime.now());
     _salesInvoice.paidamount = _paidcontroller.text.toString();
     _salesInvoice.writeoff = _writecontroller.text.toString();
-    _salesInvoice.invid = DateFormat('dd-MM-yyyy mm').format(DateTime.now());
+    _salesInvoice.invid = DateFormat('dd-MM-yyyy-mmss').format(DateTime.now());
     print("invoiceid:");
     print(salesinvoiceid);
 
@@ -533,7 +533,11 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
         await _dbHelper.insertsalesitem(_salesitems[i]);
       }
     }
-    _create_invoice_pdf(_salesInvoice.customer);
+    // _create_invoice_pdf(_salesInvoice.customer);
+  }
+
+  _pdfprint() async {
+    _create_invoice_pdf(_salesInvoice.id);
   }
 
   Future<void> _create_invoice_pdf(cust_name) async {
@@ -545,167 +549,127 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
     <title>A simple, clean, and responsive HTML invoice template</title>
     
     <style>
-    .invoice-box {
-        max-width: 800px;
-        margin: auto;
-        padding: 30px;
-        border: 1px solid #eee;
-        box-shadow: 0 0 10px rgba(0, 0, 0, .15);
-        font-size: 29px;
-        line-height: 24px;
-        font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
-        color: #555;
-    }
-    
-    .invoice-box table {
-        width: 100%;
-        line-height: inherit;
-        text-align: left;
-    }
-    
-    .invoice-box table td {
-        padding: 5px;
-        vertical-align: top;
-    }
-    
-    .invoice-box table tr td:nth-child(2) {
-        text-align: right;
-    }
 
-    .invoice-box table tr td:nth-child(4) {
-        text-align: right;
-    }
-    .invoice-box table tr td:nth-child(3) {
-        text-align: left;
-    }
+@page {
+    /* dimensions for the whole page */
+    margin:0;
+}
+
+html {
+    /* off-white, so body edge is visible in browser */
+    background: #eee;
+}
+
+body {
+    /* A5 dimensions */
+    margin:0;
+    overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+    width: 210mm;
+    height: 147mm;
+    font-size:26.5px;
+
     
-    .invoice-box table tr.top table td {
-        padding-bottom: 20px;
-    }
-    
-    .invoice-box table tr.top table td.title {
-        font-size: 45px;
-        line-height: 45px;
-        color: #333;
-    }
-    
-    .invoice-box table tr.information table td {
-        padding-bottom: 40px;
-    }
-    
-    .invoice-box table tr.heading td {
-        background: #eee;
-        border-bottom: 1px solid #ddd;
-        font-weight: bold;
-    }
-    
-    .invoice-box table tr.details td {
-        padding-bottom: 20px;
-    }
-    
-    .invoice-box table tr.item td{
-        border-bottom: 1px solid #eee;
-    }
-    
-    .invoice-box table tr.item.last td {
-        border-bottom: none;
-    }
-    
-    .invoice-box table tr.total td:nth-child(2) {
-        border-top: 2px solid #eee;
-        font-weight: bold;
-    }
-    
-    @media only screen and (max-width: 600px) {
-        .invoice-box table tr.top table td {
-            width: 100%;
-            display: block;
-            text-align: center;
-        }
-        
-        .invoice-box table tr.information table td {
-            width: 100%;
-            display: block;
-            text-align: center;
-        }
-    }
-    
-    /** RTL **/
-    .rtl {
-        direction: rtl;
-        font-family: Tahoma, 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
-    }
-    
-    .rtl table {
-        text-align: right;
-    }
-    
-    .rtl table tr td:nth-child(2) {
-        text-align: left;
-    }
+}
+
+
+
+    .box-title{
+  font-weight:bold;
+}
+.heading-row td{
+  font-weight:bold;
+  text-align:center;
+  border-bottom:solid 1px red;
+}
+.total-row td{
+  font-weight:bold;
+}
+.v-row td{
+  border:1px;
+}
+@media print{
+  
+}
     </style>
 </head>
-
 <body>
-    <div class="invoice-box">
-        <table cellpadding="0" cellspacing="0">
-            <tr class="top">
-                <td colspan="4">
-                    <table>
-                        <tr>
-                            <td class="title" colspan=2>
-                                Beirut Automatic Bakery L.L.C
-                            </td>
-                            
-                            <td>
-                               Al Quoz, Dubai<br>
-                                Tel: +97143387804<br>
-                                TRN: 100393295900003 
-                                
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
+<div class="container-fluid">
+  <div id="bill-display">
+    <!-- ----- HEADER ---- -->
+    <table style="width:100%;">
+      <caption class="text-center">TAX INVOICE </caption>
+      <tr>
+        <td colspan="3" rowspan="3">
+          <div class="box-title">
+            BEIRUT AUTOMATIC BAKERY L.L.C
+          </div>
+          <div class="box-content">
+           P.O Box 37496, Dubai, U.A.E<br>
+        Phone #: +971 4 338 7804<br>
+        Fax #: +971 4 338 7682<br>
+        Email: beirutbakery1965@gmail.com<br>
+        TRN: <b>100393295900003</b>
+          </div>
+        </td>
+        <td colspan="2">
+          <div class="box-title">Invoice No</div>
+          <div class="box-content">${_salesInvoice.invid}</div>
+        </td>
+        <td colspan="2">
+          <div class="box-title">Date</div>
+          <div class="box-content">${DateFormat('dd-MM-yyyy').format(DateTime.now())}</div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <div class="box-title">Customer</div>
+          <div class="box-content">${_salesInvoice.customer}</div>
+        </td>
+        <td colspan="2">
+          <div class="box-title">CUST TRN</div>
+          <div class="box-content">${_customer.trn}</div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <div class="box-title"></div>
+          <div class="box-content"></div>
+        </td>
+        <td colspan="2">
+          <div class="box-title"></div>
+          <div class="box-content"></div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3" rowspan="3">
+          <div class="box-title"></div>
+          <div class="box-content">
             
-            <tr class="information">
-                <td colspan="4">
-                    <table>
-                        <tr>
-                            <td>
-                                <b>Tax Invoice:</b> ${_salesInvoice.invid}<br>
-                                <b>Date:</b> ${_salesInvoice.postingdate}<br>
-                                <b>Cashier:</b> ${_posconfigs[0].warehouse}<br>
-                                <b>Customer:</b>${_salesInvoice.customer}<br>
-                                <b>Cust TRN:</b>${_customer.trn},
-                                
-                            </td>
-                            
-                            <td>
-                                
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            
-            <tr class="heading">
-                <td>
-                    Item
-                </td>
-                <td>
-                    Qty
-                </td>
+          </div>
+        </td>
+        <td colspan="4">
+          <div class="box-title"></div>
+          <div class="box-content"></div>
+        </td>
+      </tr>
+      <tr></tr><tr></tr>
+      <!-- ----- BODY ---- -->
+      <tr class="heading-row v-row" style="width:100%;">
+        <td>No.</td>
+        <td>Item</td>
+        <td></td>
+        <td>Quantity</td>
+        <td>Rate</td>
+        <td></td>
+        <td></td>
+        <td>Amount</td>
+      </tr>
 
-                <td>
-                    Rate
-                </td>
-                
-                <td>
-                    Total
-                </td>
-            </tr>
-            """;
+      
+      
+           """;
 
     var html2 = "";
 
@@ -715,70 +679,93 @@ class _salesinvoicelistState extends State<salesinvoicelist> {
               .toString();
 
       html2 += """
-              <tr class="item">
-                <td>
-                    ${_salesitems[i].itemname}
-                </td>
-                <td>
-                    ${_salesitems[i].qty}
-                </td>
-                <td>
-                    ${_salesitems[i].rate} 
-                </td>
-                <td>
-                    $total
-                </td>
-              </tr>
+        <tr class="v-row">
+        <td>1</td>
+        <td>${_salesitems[i].itemname}</td>
+        <td></td>
+        <td>${_salesitems[i].qty}</td>
+        
+        <td class="text-right">${_salesitems[i].rate} </td>
+        <td></td>
+        <td></td>
+        <td class="text-right"> $total</td>
+         </tr>
+              
             """;
 
-      var html3 = """ 
-      
-            <tr class="total">
-                <td colspan="3">
-                                <b>Paid:</b> ${_salesInvoice.paidamount}
-                                
-                                
-                                
-                </td>
-                
-                
-                
-                <td>
-                   Net: AED ${_salesInvoice.net}
-                </td>
-            </tr>
+      var html3 = "";
 
-            <tr class="total">
-                <td colspan="3">
-                      <b>Change:</b> ${_salesInvoice.changeamount}
-                </td>
-                
-                
-                <td>
-                   VAT: AED ${_salesInvoice.vat}
-                </td>
-            </tr>
-
-            <tr class="total">
-                <td colspan="3"></td>
-                
-                
-                <td>
-                   Total: AED ${_salesInvoice.grandtotal}
-                </td>
-            </tr>
-
-        </table>
-
-        
-
-    </div>
-</body>
+      html3 += """ 
+        <hr>
+        <br><br><br>
+        <tr class="total-row v-row">
+        <td colspan="3" class="text-right"> </td>
+        <td class="text-right"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td class="text-right"> </td>
+      </tr>
+        <br><br><br>
+        <tr class="total-row v-row">
+        <td colspan="3" class="text-right">Net Total (AED)</td>
+        <td class="text-right"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td class="text-right">${_salesInvoice.net}</td>
+      </tr>
+      <tr class="total-row v-row">
+        <td colspan="3" class="text-right">Vat (AED)</td>
+        <td class="text-right"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td class="text-right">${_salesInvoice.vat}</td>
+      </tr>
+      <tr class="total-row v-row">
+        <td colspan="3" class="text-right">Grand Total (AED)</td>
+        <td class="text-right"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td class="text-right">${_salesInvoice.grandtotal}</td>
+      </tr>
+      <!-- ----- FOOTER ---- -->
+      <tr>
+        <td colspan="3">
+          <div class="box-content"></div>
+          <div class="box-title"></div>
+        </td>
+        <td colspan="4"></td>
+      </tr>
+      <tr>
+        <td colspan="3">
+          Paid Amount: <span id="comp-vat-tin">AED ${_salesInvoice.paidamount}</span><br>
+          Change: <span id="comp-cst-no">AED ${_salesInvoice.paidamount}</span><br>
+          
+        </td>
+        <td colspan="4">
+          <div class="box-title text-right">
+            
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="7" class="text-center">
+                    Thank you!
+        </td>
+      </tr>
+    </table>
+  </div>
+  
+</div>
+</body?
 </html> """;
       var htmlContent = html1 + html2 + html3;
 
       Directory appDocDir = await getApplicationDocumentsDirectory();
-      var targetPath = '/storage/emulated/0/posinvoice/';
+      var targetPath = '/storage/emulated/0/Download/';
       var targetFileName = cust_name;
       print(targetPath);
 
